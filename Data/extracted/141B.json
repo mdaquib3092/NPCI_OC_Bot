@@ -1,0 +1,12 @@
+{
+  "filename": "NPCI-UPI-OC-141-B---Addendum-to-NPCI-OC-141-Safeguarding-users-on-UPI-(Addendum).pdf",
+  "oc_number": "141B",
+  "title": "NPCI UPI OC 141 B Addendum to NPCI OC 141 Safeguarding users on UPI (Addendum)",
+  "date": "",
+  "category": "UPI",
+  "supersedes": "",
+  "superseded_by": "",
+  "text": "Ni = ' C /1 NATIONAL PAYMENTS CORPORATION OF IND/A NPCI/UPI/OC-141 B/2022-23(Addendum) 21st October 2022 To, All UPI Members -Banks, PSPs & Third Party Applications Madam I Sir, f 1Subject: Addendum to NPCI/UPI/OC-141/2021-22 Safeguarding users on UPI . NPCI has issued NPCI/UPI/OC-141/2021-22 and NPCI/UPI/OC-141A/2022-23 to keep product-level controls for safeguarding UPI users. To further extend the scope for providing a safe and secure experience to the UPI users, the following changes are being introduced. Acquirers onboarding merchants who are dealing with the purchase and sale of digital goods like gold, silver, and other precious metals and payment mode is through UPI should process it under the MCC 5412. For this MCC, UPI collect request (initiation mode 00 with sub type 'collect') will not be allowed from 10th November 2022 for android users. Members are also instructed to refer to NPCI/UPI/Rupay/OC 118/2021-22-Reference Guidelines for members on Merchant acquisition standards wherein NPCI has highlighted the key risk responsibilities and accountabilities of the acquiring member banks when managing merchants. All the members are hereby advised to comply the above directives within the timelines. In case of non-compliance, NPCI reserves the rights to take necessary regulatory actions on the members. Yours sincerely, Kunal Kalawatia, Chief of Products I \n1001A, The Capital, S Wing, 10th Floor, Sandra Kurla Complex, Sandra (E), Mumbai 400 OSl T: +91 22 40009100 F: +91 22 40009101 contact@npci.org.in www.npci.org.in CIN: U74990MH2008NPL189067 \n",
+  "char_count": 1574,
+  "used_ocr": false
+}

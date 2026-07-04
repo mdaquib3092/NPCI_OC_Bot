@@ -1,0 +1,12 @@
+{
+  "filename": "UPI-_-OC-No_-170-B-_-FY-24-25-–-Addendum-to-RBI-Digital-Rupee---CBDC-and-UPI-Interoperability_.pdf",
+  "oc_number": "170B",
+  "title": "UPI OC No 170 B FY 24 25 – Addendum to RBI Digital Rupee CBDC and UPI Interoperability",
+  "date": "FY 24-25",
+  "category": "UPI",
+  "supersedes": "",
+  "superseded_by": "",
+  "text": "NEE)\n\nNATIONAL PAYMENTS CORPORATION OF INDIA\n\nNPCHUPI/OC 170 B/2023-24 (Addendum) 19\" January,2024\n\nTo\nAll members participating in Unified Payment Interface(UPI),\n\nSubject: Addendum to RBI Digital Rupee - CBDC and UPI Interoperability.\n\nWith reference to NPCI guidelines NPCI/UPI/OC No170 and NPCI/UPI/OC 170-A dated 20%\nSeptember, 2023 and 7\" November, 2023 respectively on RBI's Digital Rupee - CBDC and\nUPI interoperability were issued to the eco-system.\n\nIn order to further streamline the process of Digital Rupee wallet top up, the following\nguidelines are being issued:\n\n1. Payee PSPs (Acquirers) who are facilitating Digital Rupee wallet top up through UPI\nshall process under MCC 7411 only (7411 - Digital Rupee wallet top-up (CBDC)).\n\n2. These transactions shall be only allowed via push payment methods (No Collect\nallowed) and has to be ensured by all the members.\n\n3. As mentioned in UPI OC 170-A, it is re-iterated that \"loading of CBDC wallets via\nRupay Credit Cards on UPI as the payment mode shall not be allowed. And this\nrestriction should be implemented at the CBDC wallet issuer end.\"\n\nAll members are requested to take note of the above and undertake the requisite changes in\ntheir respective systems immediately.\n\nYours Sincerely,\nSD/-\n\nKunal Kalawatia\nChief of Products\n\n1001A, The Capital, B Wing, 10* Floor,\n\nBandra Kurla Complex, Bandra (E), Mumbai 400 051.\nT: +91 22 40009100 F: +91 22 40009101\ncontact@npci.org.in www.npci.org.in\n\nCIN: U74990MH2008NPL189067\n",
+  "char_count": 1488,
+  "used_ocr": true
+}

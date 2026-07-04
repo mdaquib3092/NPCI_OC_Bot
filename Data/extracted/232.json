@@ -1,0 +1,12 @@
+{
+  "filename": "UPI-_-OC-No_-232-_-FY-2026-27-_-Classification-of-MCC-for-Gift-Card-Voucher-Purchase-Transactions.pdf",
+  "oc_number": "232",
+  "title": "UPI OC No 232 FY 2026 27 Classification of MCC for Gift Card Voucher Purchase Transactions",
+  "date": "FY 2026-27",
+  "category": "UPI",
+  "supersedes": "",
+  "superseded_by": "",
+  "text": "Nell\n\nALWAYS\nsonora nee reece ee | FORWIPRD\n\nNPCI/UPVOC-232/2026-27 17% April 2026\n\nTo,\nAll Members — UPI and RuPay\n\nDear Sir/Madam,\n\nSubject: Classification of MCC for Gift Card/ Voucher Purchase Transactions\n\nGift card/ voucher purchase transactions are currently classified under MCC 6540, which is also\nused for PPI wallet loading, thereby creating challenges in differentiation and classification. To\nenable distinct classification and clear bifurcation, transactions related to gift cards/vouchers\npurchased through UP! shall be classified under new MCC 7016.\n\nAcquiring banks/ PSPs shall ensure that merchants offering gift cards/vouchers are assigned\nMCC 7016 within the applicable scope, including both existing and new merchants.\n\nAcquiring banks/ PSPs are required to take note of the above and ensure compliance to the same\nby 31%t May 2026.\n\nDetailed controls and responsibilities of acquiring banks/ PSPs are covered under annexure.\n\nYours Sincerely,\nSD/-\n\nSourabh Tomar\nHead — UPI Product\n\n1001A, The Capital, B Wing, 10\" Floor,\nBandra Kurla Complex, Bandra (E), Mumbai 400 051.\na T: +91 22 40009100 F: +91 22 40009101\n\noe ee non contact@npci.org.in www.npci.org.in\nam\n\nCIN: U74990MH2008NPL189067\n\n",
+  "char_count": 1213,
+  "used_ocr": true
+}

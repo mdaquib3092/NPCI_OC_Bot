@@ -1,0 +1,12 @@
+{
+  "filename": "UPI-_-OC-107-A-_-FY-23-24-_-NPCI-UPI-OC-107-A---Addendum-to-Circular-for-revision-of-RRN-in-UPI-to-avoid-duplicates.pdf",
+  "oc_number": "107",
+  "title": "UPI OC 107 A FY 23 24 NPCI UPI OC 107 A Addendum to Circular for revision of RRN in UPI to avoid duplicates",
+  "date": "FY 23-24",
+  "category": "UPI",
+  "supersedes": "",
+  "superseded_by": "",
+  "text": "N=C)p\n\nNATIONAL PAYMENTS CORPORATION OF INDIA\n\nNPCI/UPI/OC-107 A/2023-24 19\" April, 2024\nTo,\n\nAll Members in Unified Payments Interface(UPI)\n\nDear Sir/Madam,\n\nSubject: Addendum to Circular for revision of Retrieval Reference Number (RRN) in UPI to avoid\n\nduplicates\n\nBackground: With reference to NPCI/UPI/OC-107/2020-21 NPCI had revise the nomenclature of RRN\nin UPI to avoid duplicate transaction.\n\nThe revised RRN nomenclature as dated 01* April, 2021 was:\n\nRRN construct YDDDSSSSSSSS where:\n\n'Y-Ending digit of the Year\n\nDDD-Julian Date\n\nSSSSSSSS — STAN Number\n\nBasis the above RRN nomenclature, there is a limit of 100 million unique RRNs which can be generated\n\nwithin a day by a single PSP. With the UPI volumes increasing, it is observed that during peak days,\nfew of the PSP are exceeding the limit of 100 million unique RRNs as per the extent RRN logic.\nDuplicate RRNs results in system issues with respect to generation of transaction details and may also\n\nlead transactional issues at member's end.\n\nRevised RRN Nomenclature: In view of the above, the current RRN nomenclature to be revised\nwherein the entire RRN shall have the provision for STAN value which shalt help in accommodating\n~1000 Billion transactions with unique RRN from a single PSP.\n\nThe revised RRN nomenclature shall be:\nRRN construct SSSSSSSSSSSS where:\nSSSSSSSSSSSS — STAN Number\n\nThe PSPs/Bank wherein daily transaction limit are exceeding 100 million are advised to implement the\nrevised RRN construct to avoid duplicity. Further, PSPs/Banks to remove checks, if any, against the\n‘YDDD’ of the RRN construct. In case banks/PSPs have validation of ‘YDDD’ in RRN, please ensure\nthat the same is removed by 31, May 2024.\n\nYours sincerely,\nSD/-\n\nKunal Kalawatia\n\nChief of Products 1001A, The Capital, B Wing, 10\" Floor,\nBandra Kurla Complex, Bandra (E), Mumbai 400 O51-\n\nT: +9122 40009100 F: +91 22 40009101\n\ncontact@npci.org.in www.npci.org.in\n\nCIN: U749S0MH2008NPL189067\n",
+  "char_count": 1954,
+  "used_ocr": true
+}

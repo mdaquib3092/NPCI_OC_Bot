@@ -1,0 +1,12 @@
+{
+  "filename": "UPI-_-OC-No_-138-B-_-FY-2024-25-_-Addendum-to-Introduction-of-UPI-LITE.pdf",
+  "oc_number": "138B",
+  "title": "UPI OC No 138 B FY 2024 25 Addendum to Introduction of UPI LITE",
+  "date": "FY 2024-25",
+  "category": "UPI",
+  "supersedes": "",
+  "superseded_by": "",
+  "text": "NZ)\n\nNATIONAL PAYMENTS CORPORATION OF INDIA\n\nNPCI/UPI/OC No. 138 B/2024-25 21% February 2025\n\nTo,\nAll UP] Members\n\nDear Sir/Madam,\n\nSubject: Addendum to Introduction of UPI LITE\n\nWith reference to the NPCI circular NPCI/UPI/VOC No.138/2021-22, UPI LITE for small value\ntransactions was introduced. To further enhance user convenience on UPI LITE, all Issuer Banks,\nPSP Banks, and UPI Apps live on UPI LITE are required to implement the following:\n\n1. All members shall implement ‘Transfer Out’ functionality. It allows users to withdraw funds\nfrom their UPI LITE balance to the source bank account from which it was loaded, without\ndisabling UPI LITE. Purpose Code 46 shail be used to identify ‘Transfer Out’ transactions.\n\n2. All the Issuer Banks live on UPI LITE shall maintain LRN (Lite Reference Number) level\nbalances and ensure that reconciliation is carried out on daily basis with NPCI data so that\nLRN balances are reconciled in sync with NPCI data on an ongoing basis.\n\n3. UPI App with active UPI LITE shall have App passcode, biometrics or pattern-based lock\nat the time of App login.\n\nMembers to make the necessary changes by 31%! March 2025. All the other existing guidelines\nfor UPI LITE will remain same.\n\nYours Sincerely,\nSD/-\nKunal Kalawatia\n\nChief of Products\n\nJOOTA, The Capital, B Wing, 10\" Floor,\n\nBandra Kurla Complex, Bandra (E), Mumbai 400 051-\nT: +91 22 40009100 F: +91 22 40009101\ncontact@npci.org.in www.npci.org.in\n\nCIN: U74990MH2008NPL189067\n",
+  "char_count": 1471,
+  "used_ocr": true
+}

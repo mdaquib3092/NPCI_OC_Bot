@@ -1,0 +1,12 @@
+{
+  "filename": "UPI-_-OC-183-_-FY-23-24-_-Enhancing-UPI-Payment-Experience.pdf",
+  "oc_number": "183",
+  "title": "UPI OC 183 FY 23 24 Enhancing UPI Payment Experience",
+  "date": "FY 23-24",
+  "category": "UPI",
+  "supersedes": "",
+  "superseded_by": "",
+  "text": "NE)\n\nNATIONAL PAYMENTS CORPORATION OF INDIA\n\nNPCI/UPI/(OC-183/2023-24 13 December 2023\n\nTo\nAll Members of UPI,\nDear Madam/Sir,\n\nSubject: Enhancing UPI Payment Experience\n\nTo improve customer experience, NPCI has allowed linking of multiple payment\ninstruments/account types on UPI including Savings, Current, RuPay Credit Card, PPI\nWallet, Pre-sanctioned Credit Line, e-RUPI Voucher etc. This circular outlines the first\n\nset of compliances towards the objective of enhancing UPI payment experience.\n\nDuring the phase of educating and enabling merchants on multiple payment\ninstruments, it is imperative to maintain superior customer experience while\nperforming UPI transaction.\n\nTo ensure the same;\n\n1. All merchant acquiring entities (e.g., Payee PSP banks, aggregators, etc.) shall\npass the appropriate ‘FeatureSupported value’ and other respective tag\nvalues within the response validate address API.\n\n2. The Payer PSP and UPI Apps (Bank Apps and TPAPs) shall process the\nrespective value(s) and only show the payment method(s) which are accepted\nby merchant to the customer while making a payment. UP! Apps shall also\nensure appropriate communication to the customer.\n\n3. Acquirers to enable all merchants for a full suite UPI experience across all UPI\npayment account types as per operating circular NPCI/2022-23/RuPay/019-A\ndated 7° December 2022.\n\nThe respective ecosystem members are requested to adhere to above latest by 315\nJanuary 2024.\nThe content of the circular to be noted for implementation and requisite information to\n\nbe disseminated to all concerned officials.\n\nRegards,\nSD/-\n\nKunal Kalawatia\nChief of Products JOOIA, The Capital, B Wing, 10° Floor,\nBandra Kurla Complex, Bandra (E), Mumbai 400 05}.\nT: +91 22 40009100 F: +91 22 40009101\ncontact@npci.org.in www.npci.org.in\nCIN: U74990MH2008NPL189067\n",
+  "char_count": 1823,
+  "used_ocr": true
+}

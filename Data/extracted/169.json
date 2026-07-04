@@ -1,0 +1,12 @@
+{
+  "filename": "UPI-OC-169---Enhancement-in-UPI-LITE-transaction-limit-to-₹500.pdf",
+  "oc_number": "169",
+  "title": "UPI OC 169 Enhancement in UPI LITE transaction limit to ₹500",
+  "date": "",
+  "category": "UPI",
+  "supersedes": "",
+  "superseded_by": "",
+  "text": "NC)\n\nNATIONAL PAYMENTS CORPORATION OF INDIA\n\nNPCI/UPI/OC No. 169/2023-24 34% August 2023\n\nTo All Member-Unified Payments Interface (UPI)\n\nDear Madam/Sir,\n\nSubject: Enhancement in UPI LITE transaction limit to 7500\n\nUPI LITE has been designed to play a vital role in reducing infrastructure load on the Core Banking\nSystem of the banks. This feature has been making the small value transactions faster and highly\n\nreliable for transaction value below =200.\n\nAs per the latest circular issued by RBI on 24\" August, 2023 vide Circular No: RBI/2023-24/57\nCO.DPSS.POLC.No.S526/02-14-003/2023-24 with subject ‘Enhancing transaction limits for Small\nValue Digital Payments in Offline Mode’, the upper limit of an offline payment transaction is now\nincreased from %200 to 500.\n\nIn view of the above, the per transaction value limit for UP! LITE (Purpose code 44 - Online and\n\n45 - Offline) has now been enhanced to %500. The details are as below:\n\nUPI LITE Limit Previous Limit_| New Limit |\nPer Transaction = 200 = 500 |\nMax balance in UPI lite account = 2000 % 2000 (No change)\n\nThe existing UPI pricing shall be applicable for transaction amount %201-%500 for both P2P and P2M\ntransactions.\n\nWith reference to the above, Member Banks (Payee PSP), Third Party App providers (TPAPs),\nMerchants and other payment providers are requested to take note of the above enhancement and\nundertake requisite changes on the App & application systems. Members are requested to make the\n\nnecessary changes with immediate effect.\n\nYours sincerely,\n\nSD/-\nKunal Kalawatia JOOIA, The Capital, B Wing, 10\" Floor,\nChief of Products Bandra Kurla Complex, Bandra (E), Mumbai 400 051-\n\nT: +91 22 40009100 F: +9122 40009101\ncontact@npci.org.in www.npci.org.in\nCIN: U74990MH2008NPL189067\n",
+  "char_count": 1757,
+  "used_ocr": true
+}
