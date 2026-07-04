@@ -25,13 +25,48 @@ import re
 import chromadb
 from chromadb.utils import embedding_functions
 
+try:
+    from groq import Groq
+    GROQ_AVAILABLE = True
+except ImportError:
+    GROQ_AVAILABLE = False
+
 CHROMA_DIR = os.path.join("Data", "chroma_db")
 COLLECTION_NAME = "npci_oc_chunks"
 EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
 TEST_SET_PATH = "eval_test_set.csv"
 RESULTS_PATH = "eval_retrieval_results.csv"
+GROQ_MODEL = "openai/gpt-oss-20b"
 
 TOP_K = 10
+
+SYSTEM_PROMPT_FOR_EVAL = (
+    "Answer only from the provided context. Cite OC numbers you draw from "
+    "using the format (OC ###). If the answer isn't in the context, say so."
+)
+
+
+def generate_eval_answer(client, question: str, context: str) -> str:
+    response = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT_FOR_EVAL},
+            {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"},
+        ],
+        temperature=0.2,
+        max_tokens=500,
+        # Reasoning models (gpt-oss) can spend the entire max_tokens budget on
+        # hidden chain-of-thought for large contexts and return an empty
+        # answer — keep reasoning low so the budget goes to the visible answer.
+        extra_body={"reasoning_effort": "low"},
+    )
+    return response.choices[0].message.content or ""
+
+
+def extract_cited_ocs(answer: str) -> list:
+    """Pull out OC numbers the answer explicitly cites, e.g. '(OC 220)'."""
+    matches = re.findall(r"OC\s*(\d+[A-Z]?)", answer, re.IGNORECASE)
+    return [m.upper() for m in matches]
 
 
 def extract_oc_number_from_query(query: str) -> str:
@@ -112,12 +147,23 @@ def main():
 
     collection = load_collection()
 
+    groq_client = None
+    check_faithfulness = False
+    if GROQ_AVAILABLE and os.environ.get("GROQ_API_KEY"):
+        groq_client = Groq(api_key=os.environ["GROQ_API_KEY"])
+        check_faithfulness = True
+        print("GROQ_API_KEY found — will also score answer faithfulness.\n")
+    else:
+        print("No GROQ_API_KEY set — skipping faithfulness scoring (retrieval-only run).\n")
+
     test_cases = read_csv_robust(TEST_SET_PATH)
 
     print(f"Running {len(test_cases)} test questions...\n")
 
     hits = 0
     keyword_hits = 0
+    faithful_count = 0
+    faithfulness_checked = 0
     rows = []
 
     for i, case in enumerate(test_cases, start=1):
@@ -144,6 +190,23 @@ def main():
         print(f"[{i}/{len(test_cases)}] {status} — {question}")
         print(f"    Expected OC: {expected_oc_raw} | Retrieved OCs: {sorted(set(retrieved_ocs))}")
 
+        is_faithful = None
+        if check_faithfulness and docs:
+            context = "\n\n---\n\n".join(
+                f"[OC {m.get('oc_number')}]\n{d}" for d, m in zip(docs, metas)
+            )
+            try:
+                answer = generate_eval_answer(groq_client, question, context)
+                cited_ocs = extract_cited_ocs(answer)
+                # faithful if every cited OC actually appears among retrieved chunks
+                is_faithful = bool(cited_ocs) and all(oc in retrieved_ocs for oc in cited_ocs)
+                faithfulness_checked += 1
+                if is_faithful:
+                    faithful_count += 1
+                print(f"    Cited OCs: {cited_ocs} | Faithful: {is_faithful}")
+            except Exception as e:
+                print(f"    Faithfulness check failed: {e}")
+
         rows.append(
             {
                 "question": question,
@@ -151,6 +214,7 @@ def main():
                 "retrieved_oc_numbers": ";".join(sorted(set(retrieved_ocs))),
                 "oc_hit": oc_hit,
                 "keyword_hit": keyword_hit,
+                "faithful": is_faithful,
             }
         )
 
@@ -161,6 +225,12 @@ def main():
     print(f"\n{'='*50}")
     print(f"Retrieval Hit Rate (correct OC in results): {hits}/{total} ({hit_rate:.1f}%)")
     print(f"Keyword Coverage Rate: {keyword_hits}/{total} ({keyword_rate:.1f}%)")
+    if faithfulness_checked:
+        faithfulness_rate = faithful_count / faithfulness_checked * 100
+        print(
+            f"Faithfulness Rate (cited OCs actually retrieved): "
+            f"{faithful_count}/{faithfulness_checked} ({faithfulness_rate:.1f}%)"
+        )
     print(f"{'='*50}")
 
     with open(RESULTS_PATH, "w", newline="", encoding="utf-8") as f:

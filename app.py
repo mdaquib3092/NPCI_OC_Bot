@@ -241,6 +241,11 @@ def load_collection():
 def load_groq_client():
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
+        try:
+            api_key = st.secrets.get("GROQ_API_KEY")
+        except Exception:
+            api_key = None
+    if not api_key:
         return None
     return Groq(api_key=api_key)
 
@@ -296,18 +301,50 @@ def list_ocs_by_year(collection, year: str):
 
 
 def retrieve_by_oc_number(collection, oc_number: str, limit: int = 50):
-    """Fetch all chunks belonging to a specific OC number."""
+    """Fetch all chunks belonging to a specific OC number, sorted by chunk_id
+    so the document reads in its original order (ChromaDB's .get() does not
+    guarantee ordering)."""
     results = collection.get(where={"oc_number": oc_number}, limit=limit)
     docs = results.get("documents", [])
     metas = results.get("metadatas", [])
+    ids = results.get("ids", [])
+
+    def chunk_sort_key(item):
+        _id = item[2]
+        # chunk_id format is "{oc_number}_{index}" — sort by the numeric index
+        try:
+            return int(_id.rsplit("_", 1)[-1])
+        except (ValueError, IndexError):
+            return 0
+
+    combined = sorted(zip(docs, metas, ids), key=chunk_sort_key)
+    docs = [c[0] for c in combined]
+    metas = [c[1] for c in combined]
     return docs, metas
+
+
+DISTANCE_THRESHOLD = 0.8  # cosine distance cutoff — chunks weaker than this are dropped
 
 
 def retrieve_semantic(collection, query: str, n_results: int = 6):
     results = collection.query(
         query_texts=[query], n_results=n_results, where={"category": "UPI"}
     )
-    return results["documents"][0], results["metadatas"][0]
+    docs = results["documents"][0]
+    metas = results["metadatas"][0]
+    distances = results["distances"][0]
+
+    # Fix #1: drop chunks whose distance exceeds the threshold — feeding
+    # weakly-related chunks to the LLM as "context" is what causes it to
+    # either hallucinate a connection or answer from a near-miss document.
+    filtered = [
+        (doc, meta) for doc, meta, dist in zip(docs, metas, distances)
+        if dist <= DISTANCE_THRESHOLD
+    ]
+    if not filtered:
+        return [], []
+    docs, metas = zip(*filtered)
+    return list(docs), list(metas)
 
 
 def build_context(docs, metas) -> str:
@@ -315,8 +352,53 @@ def build_context(docs, metas) -> str:
     for doc, meta in zip(docs, metas):
         oc = meta.get("oc_number", "N/A")
         title = meta.get("title", "")
-        parts.append(f"[OC {oc} — {title}]\n{doc}")
+        supersedes = meta.get("supersedes", "")
+        superseded_by = meta.get("superseded_by", "")
+        header = f"[OC {oc} — {title}"
+        if supersedes:
+            header += f" | supersedes: OC {supersedes}"
+        if superseded_by:
+            header += f" | superseded_by: OC {superseded_by} (this OC is NOT the latest)"
+        header += "]"
+        parts.append(f"{header}\n{doc}")
     return "\n\n---\n\n".join(parts)
+
+
+def context_is_relevant(client, query: str, context: str, model: str = GROQ_MODEL) -> bool:
+    """Quick self-check: does the retrieved context actually contain
+    information needed to answer the question? Catches cases that pass the
+    distance threshold numerically but aren't genuinely on-topic."""
+    check_prompt = (
+        "You will see a QUESTION and some CONTEXT excerpts from NPCI circulars. "
+        "Decide if the context contains information that substantively "
+        "addresses the question (not just administrative/header text). "
+        "Respond with ONLY the single word YES or NO as your final answer, "
+        "with no other text before or after it.\n\n"
+        f"QUESTION: {query}\n\nCONTEXT:\n{context[:3000]}"
+    )
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": check_prompt}],
+            temperature=0,
+            # Reasoning models (gpt-oss) spend tokens on hidden chain-of-thought
+            # before writing the visible YES/NO — 50 was too tight and got cut
+            # off mid-reasoning every time, leaving content empty and causing
+            # this check to always return False. Give it room to finish, and
+            # keep reasoning short since this is a trivial yes/no judgment.
+            max_tokens=300,
+            extra_body={"reasoning_effort": "low"},
+        )
+        reply = (response.choices[0].message.content or "").strip().upper()
+        if not reply:
+            return True  # truncated/empty — fail open rather than assume "not relevant"
+        # Search anywhere in the reply, not just the prefix — reasoning-style
+        # models often add preamble text even when told to answer in one word.
+        if "NO" in reply and "YES" not in reply:
+            return False
+        return "YES" in reply
+    except Exception:
+        return True  # fail open — don't block the answer if the check itself errors
 
 
 def generate_answer(client, query: str, context: str, history, model: str = GROQ_MODEL):
@@ -330,13 +412,41 @@ def generate_answer(client, query: str, context: str, history, model: str = GROQ
             "content": f"Context from NPCI circulars:\n\n{context}\n\nQuestion: {query}",
         }
     )
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=0.2,
-        max_tokens=800,
-    )
-    return response.choices[0].message.content
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0.2,
+            max_tokens=800,
+            # Reasoning models (gpt-oss) can spend the entire max_tokens budget
+            # on hidden chain-of-thought for large contexts (e.g. full-OC
+            # summaries) and return a completely empty answer. Keep reasoning
+            # low so the budget goes to the actual visible answer.
+            extra_body={"reasoning_effort": "low"},
+        )
+        content = response.choices[0].message.content
+        if not content:
+            return (
+                "⚠️ The model returned an empty response for this question "
+                "(likely too much context for the token budget). Try asking "
+                "about a narrower part of the circular, or rephrase the question."
+            )
+        return content
+    except Exception as e:
+        error_str = str(e)
+        if "model_permission_blocked" in error_str or "403" in error_str:
+            return (
+                f"⚠️ The model `{model}` is blocked on your Groq account. "
+                f"Enable it at https://console.groq.com/settings/limits, or "
+                f"switch to a different model in the sidebar under "
+                f"'⚙️ Settings & info'."
+            )
+        if "rate_limit" in error_str.lower() or "429" in error_str:
+            return (
+                "⚠️ Rate limit reached on the Groq free tier. Please wait a "
+                "moment and try again."
+            )
+        return f"⚠️ Something went wrong generating the answer: {error_str[:300]}"
 
 
 def main():
@@ -507,7 +617,11 @@ I'll answer using the indexed circulars and always cite the OC number I'm drawin
             if sources:
                 with st.expander("Sources"):
                     for s in sources:
-                        st.caption(s)
+                        if isinstance(s, dict):
+                            st.markdown(f"**OC {s['oc']}** — {s['title']}")
+                            st.caption(s["excerpt"])
+                        else:
+                            st.caption(s)  # backward-compat for older sessions
             if role == "assistant":
                 prev_question = (
                     session["display_history"][idx - 1][1] if idx > 0 else ""
@@ -591,20 +705,42 @@ I'll answer using the indexed circulars and always cite the OC number I'm drawin
                 sources = []
             else:
                 context = build_context(docs, metas)
-                sources = sorted(
-                    {f"OC {m.get('oc_number', 'N/A')} — {m.get('title', '')}" for m in metas}
-                )
+                seen_ocs = set()
+                sources = []
+                for doc, m in zip(docs, metas):
+                    oc = m.get("oc_number", "N/A")
+                    if oc in seen_ocs:
+                        continue
+                    seen_ocs.add(oc)
+                    excerpt = doc.strip().replace("\n", " ")[:220]
+                    sources.append(
+                        {
+                            "oc": oc,
+                            "title": m.get("title", ""),
+                            "excerpt": excerpt + ("..." if len(doc.strip()) > 220 else ""),
+                        }
+                    )
 
                 if groq_client:
-                    answer = generate_answer(
-                        groq_client,
-                        query,
-                        context,
-                        session["llm_history"],
-                        model=st.session_state.get("selected_model", GROQ_MODEL),
-                    )
-                    session["llm_history"].append({"role": "user", "content": query})
-                    session["llm_history"].append({"role": "assistant", "content": answer})
+                    selected_model = st.session_state.get("selected_model", GROQ_MODEL)
+                    if context_is_relevant(groq_client, query, context, model=selected_model):
+                        answer = generate_answer(
+                            groq_client,
+                            query,
+                            context,
+                            session["llm_history"],
+                            model=selected_model,
+                        )
+                        session["llm_history"].append({"role": "user", "content": query})
+                        session["llm_history"].append({"role": "assistant", "content": answer})
+                    else:
+                        answer = (
+                            "I found some circulars that came up in search, but on review "
+                            "they don't substantively address this question. I don't have "
+                            "a reliable answer for this in the indexed corpus — please "
+                            "check the official NPCI/URCS sources directly."
+                        )
+                        sources = []
                 else:
                     answer = "**Relevant excerpts (LLM not configured):**\n\n" + "\n\n".join(
                         f"**OC {m.get('oc_number')}** — {m.get('title')}\n\n{d[:400]}..."
@@ -615,7 +751,11 @@ I'll answer using the indexed circulars and always cite the OC number I'm drawin
             if sources:
                 with st.expander("Sources"):
                     for s in sources:
-                        st.caption(s)
+                        if isinstance(s, dict):
+                            st.markdown(f"**OC {s['oc']}** — {s['title']}")
+                            st.caption(s["excerpt"])
+                        else:
+                            st.caption(s)
 
         session["display_history"].append(("assistant", answer, sources))
         session["updated_at"] = datetime.now().isoformat()

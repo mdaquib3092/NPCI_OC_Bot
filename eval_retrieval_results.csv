@@ -1,15 +1,15 @@
-question,expected_oc_number,retrieved_oc_numbers,oc_hit,keyword_hit
-What is the current UPI Lite wallet limit?,205,138;169;169A;177;179;205,True,True
-What is the current UPI Lite per-transaction limit?,169,169;169A;170;177;185;185A;209,True,True
-What is the UPI AutoPay AFA limit?,151,151,True,True
-What is the settlement cycle change mentioned in recent circulars?,197,197;222;222A,True,True
-What is UDIR and what does it do?,165,165,True,True
-What is the P2P transaction limit change?,"181, 181B",181;181B;185B;201B;220;76;76A,True,True
-What is the maximum inward credit limit for P2PM merchants?,192,141;181;181B;185B;192,True,True
-why is it necessary for other players to scale up their consumer outreach?,159,115D;133;141;142;159;161;181;190,True,True
-What are the primary differences in transaction authorization between Full Delegation and Partial Delegation?,201,201;201A,True,True
-Are there any specific exclusions regarding the transaction limits?,"181, 181B",169;170;185;185B;224;76;76A;76C,False,False
-What specific action must be taken if a P2PM merchant exceeds the monthly credit limit for three consecutive months?,192,141;181;181B;192,True,True
-"Does the P2PM category apply to all merchant types, and what is its primary purpose?",192,170A;181;192;39;39A,True,True
-What are the security protocols for IoT devices and software profiles when linked to a UPI Circle?,"201, 201A, 201B",141D;163A;175;190;199;201;201B,True,False
-What visibility does a Primary User maintain over their UPI Circle participants?,"201, 201A, 201B",141D;165;187;201;201A;201B;234,True,True
+question,expected_oc_number,retrieved_oc_numbers,oc_hit,keyword_hit,faithful
+What is the current UPI Lite wallet limit?,205,138;169;169A;177;179;226A,False,True,True
+What is the current UPI Lite per-transaction limit?,169,169;169A;170;177;185;185A;209,True,True,True
+What is the UPI AutoPay AFA limit?,151,151,True,True,True
+What is the settlement cycle change mentioned in recent circulars?,197,197;222;222A,True,True,True
+What is UDIR and what does it do?,165,165,True,True,True
+What is the P2P transaction limit change?,"181, 181B",181;181B;185B;201B;220;76;76A,True,True,True
+What is the maximum inward credit limit for P2PM merchants?,192,141;181;181B;185B;192,True,True,True
+why is it necessary for other players to scale up their consumer outreach?,159,;115D;149A;161;187;212,False,False,True
+What are the primary differences in transaction authorization between Full Delegation and Partial Delegation?,201,201;201A,True,True,True
+Are there any specific exclusions regarding the transaction limits?,"181, 181B",169;185;185B;209;224;76;76A;76C,False,False,True
+What specific action must be taken if a P2PM merchant exceeds the monthly credit limit for three consecutive months?,192,141;181;181B;192,True,True,True
+"Does the P2PM category apply to all merchant types, and what is its primary purpose?",192,170A;181;192;39;39A,True,True,False
+What are the security protocols for IoT devices and software profiles when linked to a UPI Circle?,"201, 201A, 201B",133;141D;163A;175;199;201;201B;226A,True,False,True
+What visibility does a Primary User maintain over their UPI Circle participants?,"201, 201A, 201B",165;187;201;201A;201B;234,True,True,True
