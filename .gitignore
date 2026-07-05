@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Raw source PDFs (manually collected, not scraped — kept local only,
+# per the data-sourcing note in readme.md)
+Data/raw_pdfs/
+
+# Extracted full-text of each circular (intermediate pipeline output,
+# regenerated from Data/raw_pdfs/ via extract.py)
+Data/extracted/
+
+# Local chat history — ephemeral per README, resets on Streamlit Cloud
+# redeploy; may contain real user questions once deployed, so it should
+# never be committed
+Data/chat_history.json
+
+# Generated locally by build_regression_set.py / manual Sheet exports —
+# not something to version
+Data/feedback_export.csv
+regression_candidates.csv
+
+# Note: Data/chroma_db/ and Data/manifest.csv ARE committed intentionally —
+# the prebuilt vector index is what the deployed app actually needs to run.
