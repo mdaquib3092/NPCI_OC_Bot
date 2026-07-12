@@ -1,0 +1,7 @@
+OC 120 Annexure A defines standardized UPI transaction limits across all ecosystem members:
+- P2P and P2PM default limit: Rs 1,00,000 per transaction
+- P2P/P2PM collect request limit: Rs 2,000
+- P2M verified merchant: Rs 1,00,000 default; Rs 2,00,000 for specific categories (as per OC 82 and OC 96)
+- P2M non-verified merchant (Share Intent link and pay): Rs 2,000
+- P2M non-verified merchant offline (QR share and pay): Rs 2,000
+Compliance deadline: 31 October 2021.

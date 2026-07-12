@@ -1,7 +1,7 @@
 """
 Phase 2: Chunk extracted OC text into smaller pieces for embedding.
 
-Reads:  Data/extracted/*.json  (from extract.py)
+Reads:  Data/extracted/*.json  (from extract.py / rebuild_corpus.py)
 Writes: Data/chunks.jsonl      (one JSON object per line, each a single chunk)
 
 Chunking strategy:
@@ -26,8 +26,6 @@ MAX_CHUNK_CHARS = 1200   # roughly 200-300 words per chunk
 MIN_CHUNK_CHARS = 80     # merge tiny fragments into neighbors
 OVERLAP_CHARS = 150      # overlap between consecutive chunks to preserve context
 
-# Lines matching these patterns are administrative boilerplate, not
-# substantive policy content — strip them before chunking.
 BOILERPLATE_LINE_PATTERNS = [
     r"^\s*Dear\s+(Sir|Madam|Members?|Sir/Madam|Madam/Sir)",
     r"^\s*(To\s+)?All\s+Members?(\s+Banks?)?",
@@ -49,22 +47,18 @@ BOILERPLATE_REGEX = re.compile(
     "|".join(f"(?:{p})" for p in BOILERPLATE_LINE_PATTERNS), re.IGNORECASE
 )
 
-# Letterhead/footer markers that can appear anywhere in a line (phone, fax,
-# website, CIN number, email) — checked with search, not just line-start match.
 FOOTER_CONTAINS_PATTERNS = [
     r"CIN\s*:\s*U\d",
     r"www\.npci\.org\.in",
     r"contact@npci\.org\.in",
     r"[\w.\-]+@npci\.org\.in",
-    r"\bT\s*:\s*\+?\d{2,3}[\s\-]?\d{2,}",   # phone marker e.g. "T: +91 22 ..."
-    r"\bF\s*:\s*\+?\d{2,3}[\s\-]?\d{2,}",   # fax marker e.g. "F: +91 22 ..."
+    r"\bT\s*:\s*\+?\d{2,3}[\s\-]?\d{2,}",
+    r"\bF\s*:\s*\+?\d{2,3}[\s\-]?\d{2,}",
 ]
 FOOTER_REGEX = re.compile("|".join(f"(?:{p})" for p in FOOTER_CONTAINS_PATTERNS), re.IGNORECASE)
 
 
 def clean_text(text: str) -> str:
-    """Strip administrative boilerplate lines (salutations, addressee lines,
-    subject/reference lines, signature blocks, letterhead footers) before chunking."""
     lines = text.split("\n")
     cleaned_lines = [
         line
@@ -73,13 +67,9 @@ def clean_text(text: str) -> str:
         and not FOOTER_REGEX.search(line)
     ]
     text = "\n".join(cleaned_lines)
-
-    # Some PDFs lose line breaks, squishing "Sub:"/"To," inline with other
-    # text — strip these labels wherever they appear, not just at line-start.
     text = re.sub(r"\bSub(ject)?\s*:\s*", "", text)
     text = re.sub(r"\bTo\s*,\s*", "", text)
     text = re.sub(r"\bRef(erence)?\s*:\s*", "", text)
-
     return text
 
 
@@ -89,7 +79,6 @@ def split_into_paragraphs(text: str):
 
 
 def split_long_paragraph(paragraph: str, max_chars: int):
-    """Split a long paragraph into sentence-grouped chunks under max_chars."""
     sentences = re.split(r"(?<=[.!?])\s+", paragraph)
     chunks = []
     current = ""
@@ -108,7 +97,6 @@ def split_long_paragraph(paragraph: str, max_chars: int):
 def build_chunks(text: str):
     paragraphs = split_into_paragraphs(text)
 
-    # Merge tiny paragraphs into the following one
     merged = []
     buffer = ""
     for p in paragraphs:
@@ -126,8 +114,6 @@ def build_chunks(text: str):
         else:
             merged.append(buffer)
 
-    # Split anything still too long, then stitch in overlap between
-    # consecutive chunks so context isn't lost at boundaries.
     raw_chunks = []
     for p in merged:
         if len(p) > MAX_CHUNK_CHARS:
@@ -156,6 +142,8 @@ def main():
 
     total_chunks = 0
     skipped = []
+    seen_chunk_ids = set()
+    duplicate_ids_found = []
 
     with open(CHUNKS_PATH, "w", encoding="utf-8") as out_f:
         for i, fname in enumerate(json_files, start=1):
@@ -171,9 +159,26 @@ def main():
             text = clean_text(text)
             chunks = build_chunks(text)
 
+            # Base chunk_id on the actual .json FILENAME (guaranteed unique
+            # on disk), not just the oc_number field. Two different
+            # extracted files can share the same oc_number metadata (e.g.
+            # after collision-disambiguation upstream gives them different
+            # disk filenames like "01.json" and "01__a1b2c3.json" but keeps
+            # oc_number="01" in both) — using oc_number alone here would
+            # silently produce duplicate chunk_ids and crash embed.py.
+            file_stem = os.path.splitext(fname)[0]
+            id_prefix = record.get("oc_number") or file_stem
+
             for idx, chunk_text in enumerate(chunks):
+                chunk_id = f"{id_prefix}__{file_stem}_{idx}"
+
+                if chunk_id in seen_chunk_ids:
+                    duplicate_ids_found.append((chunk_id, fname))
+                    continue
+                seen_chunk_ids.add(chunk_id)
+
                 chunk_record = {
-                    "chunk_id": f"{record.get('oc_number') or fname}_{idx}",
+                    "chunk_id": chunk_id,
                     "oc_number": record.get("oc_number", ""),
                     "title": record.get("title", ""),
                     "date": record.get("date", ""),
@@ -193,6 +198,12 @@ def main():
         print(f"\n{len(skipped)} file(s) had no text (skipped):")
         for s in skipped:
             print(f"  - {s}")
+    if duplicate_ids_found:
+        print(f"\nWARNING: {len(duplicate_ids_found)} duplicate chunk_id(s) were "
+              f"generated and skipped (investigate Data/extracted/ for files "
+              f"with identical oc_number + filename stems):")
+        for cid, fn in duplicate_ids_found:
+            print(f"  - {cid}  (from {fn})")
 
     print("\nNext step: embedding (embed.py) to build the searchable vector index.")
 

@@ -32,15 +32,31 @@ import requests
 import streamlit as st
 from chromadb.utils import embedding_functions
 from groq import Groq
+from openai import OpenAI  # OpenAI-compatible client — used for the local Ollama backend
+
+from number_guard import check_numbers, check_currency_symbols
+from config import (
+    ACRONYM_TO_OC,
+    GROQ_MODEL,
+    AVAILABLE_MODELS,
+    LLM_PROVIDER,
+    OLLAMA_BASE_URL,
+    OLLAMA_MODEL,
+    OLLAMA_MODELS,
+)
+from hybrid_search import HybridSearcher
+
+# Resolve which model list + default apply for the active backend.
+if LLM_PROVIDER == "ollama":
+    ACTIVE_MODELS = OLLAMA_MODELS
+    DEFAULT_MODEL = OLLAMA_MODEL
+else:
+    ACTIVE_MODELS = AVAILABLE_MODELS
+    DEFAULT_MODEL = GROQ_MODEL
 
 CHROMA_DIR = os.path.join("Data", "chroma_db")
 COLLECTION_NAME = "npci_oc_chunks"
 EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
-GROQ_MODEL = "openai/gpt-oss-20b"  # fast, free-tier friendly (llama-3.1-8b-instant is deprecated)
-AVAILABLE_MODELS = {
-    "openai/gpt-oss-20b": "GPT-OSS 20B (fast, recommended default)",
-    "openai/gpt-oss-120b": "GPT-OSS 120B (more capable, slower)",
-}
 CHAT_HISTORY_PATH = os.path.join("Data", "chat_history.json")
 
 # Google Forms feedback submission (no API key/billing needed — this is a
@@ -183,6 +199,12 @@ Operating Circulars (OCs) using ONLY the excerpts provided in the context below.
 Rules:
 - Answer only from the provided context. If the answer isn't in the context, \
 say so clearly — do not guess or use outside knowledge.
+- CRITICAL — NUMBERS MUST BE COPIED EXACTLY: When stating any amount, limit, \
+percentage, or date, copy it character-for-character from the source text. \
+Never recalculate, round, reformat, or convert a numeric value, and never \
+change a currency symbol (₹ stays ₹ — do not write $ or €). If you are not \
+completely certain of an exact figure, quote the surrounding sentence \
+verbatim instead of restating just the number.
 - IGNORE administrative boilerplate entirely: salutations ("Dear Sir/Madam", \
 "Dear Members"), addressee lines ("All Members", "All Member Banks"), \
 "Subject:" lines, letterhead/reference numbers, signature blocks ("Yours \
@@ -194,7 +216,8 @@ procedures, obligations.
 mention the earlier ones too if relevant (e.g. "OC 88 originally set this at \
 X; OC 220 later revised it to Y").
 - Summarize and paraphrase in your own words rather than copying long \
-passages verbatim from the context.
+passages verbatim from the context — EXCEPT for exact numbers, amounts, and \
+dates, which must always match the source precisely as stated above.
 - The context below is authoritative and current, regardless of any dates \
 mentioned in it (including dates like 2025 or 2026). Never refuse to answer \
 or express doubt about a circular's existence because its date seems "in \
@@ -238,7 +261,18 @@ def load_collection():
 
 
 @st.cache_resource
-def load_groq_client():
+def load_llm_client():
+    """Return an LLM client for the active backend, or None if unconfigured.
+
+    Both backends expose the same OpenAI-style `.chat.completions.create()`
+    interface, so downstream code (context_is_relevant / generate_answer) is
+    provider-agnostic apart from a couple of provider-specific request params.
+    """
+    if LLM_PROVIDER == "ollama":
+        # Ollama's OpenAI-compatible endpoint ignores the API key, but the SDK
+        # requires a non-empty value.
+        return OpenAI(base_url=OLLAMA_BASE_URL, api_key="ollama")
+
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         try:
@@ -251,29 +285,65 @@ def load_groq_client():
 
 
 def extract_oc_number_from_query(query: str) -> str:
-    """Detect an explicit OC number reference in the user's query, e.g. 'OC 76', 'OC-220'."""
-    match = re.search(r"\bOC[\s\-]?0*(\d+[A-Z]?)\b", query, re.IGNORECASE)
-    if match:
-        return match.group(1).upper()
+    """Detect an explicit OC or circular number reference in the user's query,
+    e.g. 'OC 76', 'OC-220', 'circular 120', 'circular no. 185A'."""
+    patterns = [
+        r"\bOC[\s\-]?0*(\d+[A-Z]?)\b",
+        r"\bCircular[\s\-]?No\.?[\s\-]?0*(\d+[A-Z]?)\b",
+        r"\bCircular[\s\-]?0*(\d+[A-Z]?)\b",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, query, re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
     return ""
 
 
-# Domain acronyms whose full meaning embeddings don't always capture well —
-# map them directly to the OC number that defines them.
-ACRONYM_TO_OC = {
-    "udir": "165",
-    "odr": "145",
-    "afa": "151",
-    "tpap": "159",
+# Domain acronyms/terms whose full meaning embeddings don't always capture
+# well — map them directly to the OC number(s) that define them. Values are
+# imported from config.py.
+
+
+
+def _acronym_pattern(term: str) -> str:
+    """Word-boundary pattern for a term; allow flexible whitespace/hyphens
+    between words so 'upi lite' also matches 'UPI-LITE' / 'UPI  Lite'."""
+    parts = [re.escape(p) for p in term.split()]
+    return r"\b" + r"[\s\-]+".join(parts) + r"\b"
+
+
+def extract_acronym_ocs(query: str) -> list:
+    """Return the OC-number list for the most specific acronym/term matched in
+    the query. Longest key first, so 'upi lite' wins over a shorter overlapping
+    key rather than a generic one grabbing it. Empty list if nothing matches."""
+    lower = query.lower()
+    for term in sorted(ACRONYM_TO_OC, key=len, reverse=True):
+        if re.search(_acronym_pattern(term), lower):
+            return ACRONYM_TO_OC[term]
+    return []
+
+
+# Generic "what is the P2P/P2M limit" queries often don't surface OC 120 or
+# OC 181/181B within semantic top-k (chain-expansion only helps if one of
+# those is ALREADY retrieved) — so directly route these to OC 120, which
+# holds the actual default Rs 1,00,000 P2P/P2M limit in its Annexure A.
+LIMIT_KEYWORD_TO_OC = {
+    # 120 = per-transaction standardised limit (Rs 1,00,000, Annexure A);
+    # 181B = CURRENT 24-hr P2P count/cumulative limit (50 txns). The earlier
+    # OC 181 (25 txns) is deliberately excluded — including the superseded
+    # figure alongside the current one makes the LLM cite the stale number.
+    ("p2p", "limit"): ["120", "181B"],
+    ("p2m", "limit"): ["120"],
+    ("peer to peer", "limit"): ["120", "181B"],
 }
 
 
-def extract_acronym_oc(query: str) -> str:
+def extract_limit_keyword_ocs(query: str) -> list:
     lower = query.lower()
-    for acronym, oc in ACRONYM_TO_OC.items():
-        if re.search(rf"\b{acronym}\b", lower):
-            return oc
-    return ""
+    for keywords, ocs in LIMIT_KEYWORD_TO_OC.items():
+        if all(kw in lower for kw in keywords):
+            return ocs
+    return []
 
 
 def detect_listing_year(query: str) -> str:
@@ -289,8 +359,15 @@ def detect_listing_year(query: str) -> str:
 
 def list_ocs_by_year(collection, year: str):
     """Full scan of all indexed chunks, deduped by OC number, filtered by year
-    appearing in the date field."""
-    all_data = collection.get(where={"category": "UPI"}, limit=100000)
+    appearing in the date field.
+
+    NOTE: previously filtered with where={"category": "UPI"} — but no chunk
+    in this corpus ever has category == "UPI" (categories are things like
+    "limits", "disputes", "product", etc., or "uncategorised"). That filter
+    silently excluded the entire corpus. Removed — no category filter needed
+    since every document here is already UPI-related.
+    """
+    all_data = collection.get(limit=100000)
     seen = {}
     for meta in all_data.get("metadatas", []):
         oc = meta.get("oc_number", "")
@@ -300,24 +377,43 @@ def list_ocs_by_year(collection, year: str):
     return seen
 
 
-def retrieve_by_oc_number(collection, oc_number: str, limit: int = 50):
-    """Fetch all chunks belonging to a specific OC number, sorted by chunk_id
-    so the document reads in its original order (ChromaDB's .get() does not
-    guarantee ordering)."""
-    results = collection.get(where={"oc_number": oc_number}, limit=limit)
+def retrieve_by_oc_number(collection, oc_numbers, limit: int = 50, max_chunks: int = 40):
+    """Fetch all chunks for one OC number or a family of them.
+
+    Accepts a single OC string or a list (ordered most-current/authoritative
+    first). Chunks are sorted by that priority order and then by chunk index,
+    so each document reads in order and the latest circular comes first.
+    Total chunks are capped (max_chunks) so a multi-OC family fetch can't blow
+    the LLM token budget — the most-current OC's chunks survive the cap first.
+    ChromaDB's .get() does not guarantee ordering, hence the explicit sort."""
+    if isinstance(oc_numbers, str):
+        oc_numbers = [oc_numbers]
+    if not oc_numbers:
+        return [], []
+
+    where = (
+        {"oc_number": oc_numbers[0]}
+        if len(oc_numbers) == 1
+        else {"oc_number": {"$in": oc_numbers}}
+    )
+    results = collection.get(where=where, limit=limit * len(oc_numbers))
     docs = results.get("documents", [])
     metas = results.get("metadatas", [])
     ids = results.get("ids", [])
 
-    def chunk_sort_key(item):
-        _id = item[2]
+    priority = {oc: i for i, oc in enumerate(oc_numbers)}
+
+    def sort_key(item):
+        _doc, meta, _id = item
+        oc = meta.get("oc_number", "")
         # chunk_id format is "{oc_number}_{index}" — sort by the numeric index
         try:
-            return int(_id.rsplit("_", 1)[-1])
+            idx = int(_id.rsplit("_", 1)[-1])
         except (ValueError, IndexError):
-            return 0
+            idx = 0
+        return (priority.get(oc, len(oc_numbers)), idx)
 
-    combined = sorted(zip(docs, metas, ids), key=chunk_sort_key)
+    combined = sorted(zip(docs, metas, ids), key=sort_key)[:max_chunks]
     docs = [c[0] for c in combined]
     metas = [c[1] for c in combined]
     return docs, metas
@@ -325,26 +421,78 @@ def retrieve_by_oc_number(collection, oc_number: str, limit: int = 50):
 
 DISTANCE_THRESHOLD = 0.8  # cosine distance cutoff — chunks weaker than this are dropped
 
+# Upper bound on how many chunks get concatenated into the LLM context.
+# Keeps the prompt within the token budget (esp. Groq free-tier TPM limits)
+# even when a full forced OC is merged with semantic results.
+MAX_CONTEXT_CHUNKS = 24
 
-def retrieve_semantic(collection, query: str, n_results: int = 6):
-    results = collection.query(
-        query_texts=[query], n_results=n_results, where={"category": "UPI"}
-    )
-    docs = results["documents"][0]
-    metas = results["metadatas"][0]
-    distances = results["distances"][0]
 
-    # Fix #1: drop chunks whose distance exceeds the threshold — feeding
-    # weakly-related chunks to the LLM as "context" is what causes it to
-    # either hallucinate a connection or answer from a near-miss document.
-    filtered = [
-        (doc, meta) for doc, meta, dist in zip(docs, metas, distances)
-        if dist <= DISTANCE_THRESHOLD
-    ]
-    if not filtered:
+# Known supersession chains — when semantic search surfaces ANY member of
+# one of these chains, we inject the missing members (especially the
+# latest) so "what is the CURRENT limit" queries don't stop at an older,
+# superseded circular just because it embedded closer to the query.
+SUPERSESSION_CHAINS = [
+    ["82", "127", "185", "185A", "185B"],
+    ["76", "76A", "76B", "76C"],
+    ["138", "138A", "138B", "169", "169A"],
+    ["151", "151A"],
+    ["184", "184A", "184B"],
+    ["181", "181A", "181B"],
+    ["70", "72", "192"],
+    ["115", "115A", "115B", "115C", "115D", "115E"],
+    ["141", "141B", "141D"],
+    ["163", "163A"],
+    ["193", "193A", "193B", "193C"],
+    ["201", "201A", "201B"],
+    ["208", "208A", "208B", "208C"],
+]
+_CHAIN_LOOKUP = {oc: chain for chain in SUPERSESSION_CHAINS for oc in chain}
+
+
+def expand_with_chain(collection, docs, metas, max_extra: int = 4):
+    """If any retrieved chunk's oc_number is part of a known supersession
+    chain, fetch one representative chunk for each OTHER member of that
+    chain (that isn't already present) and append it to the results."""
+    present_ocs = {m.get("oc_number", "") for m in metas}
+    chains_hit = {
+        tuple(_CHAIN_LOOKUP[oc]) for oc in present_ocs if oc in _CHAIN_LOOKUP
+    }
+    if not chains_hit:
+        return docs, metas
+
+    missing = []
+    for chain in chains_hit:
+        for oc in chain:
+            if oc not in present_ocs:
+                missing.append(oc)
+                present_ocs.add(oc)  # avoid adding the same oc twice
+
+    added = 0
+    for oc in missing:
+        if added >= max_extra:
+            break
+        result = collection.get(where={"oc_number": oc}, limit=1)
+        if result.get("documents"):
+            docs = list(docs) + [result["documents"][0]]
+            metas = list(metas) + [result["metadatas"][0]]
+            added += 1
+
+    return docs, metas
+
+
+@st.cache_resource
+def load_hybrid_searcher():
+    return HybridSearcher()
+
+
+def retrieve_semantic(collection, query: str, n_results: int = 10):
+    """Retrieve top chunks using hybrid search (BM25 + Vector RRF) fused ranking."""
+    searcher = load_hybrid_searcher()
+    docs, metas = searcher.search(collection, query, top_k=n_results)
+    if not docs:
         return [], []
-    docs, metas = zip(*filtered)
-    return list(docs), list(metas)
+    docs, metas = expand_with_chain(collection, list(docs), list(metas))
+    return docs, metas
 
 
 def build_context(docs, metas) -> str:
@@ -364,44 +512,82 @@ def build_context(docs, metas) -> str:
     return "\n\n---\n\n".join(parts)
 
 
-def context_is_relevant(client, query: str, context: str, model: str = GROQ_MODEL) -> bool:
+# Thinking/reasoning suppression: local reasoning models (e.g. qwen3) emit a
+# hidden <think>…</think> block that would otherwise consume the token budget
+# (starving short-max_tokens calls) and leak into the visible answer. Append a
+# suppression hint for Ollama and strip any residual block as a safety net.
+_THINK_SUFFIX = " /no_think" if LLM_PROVIDER == "ollama" else ""
+
+
+def _provider_extra() -> dict:
+    """Provider-specific request params. Groq's gpt-oss models need
+    reasoning_effort=low so hidden reasoning doesn't eat the token budget;
+    Ollama's OpenAI endpoint doesn't accept that param."""
+    if LLM_PROVIDER == "groq":
+        return {"extra_body": {"reasoning_effort": "low"}}
+    return {}
+
+
+def strip_think(text: str) -> str:
+    if not text:
+        return text
+    # remove complete <think>...</think> blocks and any unterminated leader
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<think>.*$", "", text, flags=re.DOTALL | re.IGNORECASE)
+    return text.strip()
+
+
+def context_is_relevant(client, query: str, context: str, model: str = DEFAULT_MODEL) -> bool:
     """Quick self-check: does the retrieved context actually contain
     information needed to answer the question? Catches cases that pass the
-    distance threshold numerically but aren't genuinely on-topic."""
+    distance threshold numerically but aren't genuinely on-topic.
+
+    Biased toward "relevant" (fail open) unless the model gives an
+    unambiguous negative — a false "not relevant" is worse UX than
+    occasionally letting a borderline case through to generation, since the
+    main SYSTEM_PROMPT already instructs the model to say so if it can't
+    answer from context.
+    """
     check_prompt = (
         "You will see a QUESTION and some CONTEXT excerpts from NPCI circulars. "
         "Decide if the context contains information that substantively "
         "addresses the question (not just administrative/header text). "
         "Respond with ONLY the single word YES or NO as your final answer, "
         "with no other text before or after it.\n\n"
-        f"QUESTION: {query}\n\nCONTEXT:\n{context[:3000]}"
+        f"QUESTION: {query}\n\nCONTEXT:\n{context[:3000]}" + _THINK_SUFFIX
     )
     try:
         response = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": check_prompt}],
             temperature=0,
-            # Reasoning models (gpt-oss) spend tokens on hidden chain-of-thought
-            # before writing the visible YES/NO — 50 was too tight and got cut
-            # off mid-reasoning every time, leaving content empty and causing
-            # this check to always return False. Give it room to finish, and
-            # keep reasoning short since this is a trivial yes/no judgment.
-            max_tokens=300,
-            extra_body={"reasoning_effort": "low"},
+            max_tokens=200,  # headroom for reasoning models that emit hidden tokens
+            **_provider_extra(),
         )
-        reply = (response.choices[0].message.content or "").strip().upper()
-        if not reply:
-            return True  # truncated/empty — fail open rather than assume "not relevant"
-        # Search anywhere in the reply, not just the prefix — reasoning-style
-        # models often add preamble text even when told to answer in one word.
-        if "NO" in reply and "YES" not in reply:
+        reply = strip_think(response.choices[0].message.content or "").strip().upper()
+
+        if "YES" in reply:
+            return True
+        if "NO" in reply:
             return False
-        return "YES" in reply
+        # Ambiguous/empty reply — default to relevant rather than blocking
+        return True
     except Exception:
         return True  # fail open — don't block the answer if the check itself errors
 
 
-def generate_answer(client, query: str, context: str, history, model: str = GROQ_MODEL):
+def clean_llm_html(text: str) -> str:
+    """Some models occasionally emit raw HTML tags (e.g. <br>) when formatting
+    lists — Streamlit's markdown doesn't render these by default, so they'd
+    show up as literal text. Convert the common ones to proper line breaks."""
+    if not text:
+        return text
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</?p\s*>", "\n", text, flags=re.IGNORECASE)
+    return text
+
+
+def generate_answer(client, query: str, context: str, history, model: str = DEFAULT_MODEL):
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     # include prior turns for conversational follow-ups
     for turn in history[-6:]:
@@ -409,31 +595,50 @@ def generate_answer(client, query: str, context: str, history, model: str = GROQ
     messages.append(
         {
             "role": "user",
-            "content": f"Context from NPCI circulars:\n\n{context}\n\nQuestion: {query}",
+            "content": f"Context from NPCI circulars:\n\n{context}\n\nQuestion: {query}"
+            + _THINK_SUFFIX,
         }
     )
     try:
         response = client.chat.completions.create(
             model=model,
             messages=messages,
-            temperature=0.2,
+            temperature=0,  # was 0.2 — numeric/factual answers should not be sampled
             max_tokens=800,
-            # Reasoning models (gpt-oss) can spend the entire max_tokens budget
-            # on hidden chain-of-thought for large contexts (e.g. full-OC
-            # summaries) and return a completely empty answer. Keep reasoning
-            # low so the budget goes to the actual visible answer.
-            extra_body={"reasoning_effort": "low"},
+            **_provider_extra(),
         )
-        content = response.choices[0].message.content
-        if not content:
-            return (
-                "⚠️ The model returned an empty response for this question "
-                "(likely too much context for the token budget). Try asking "
-                "about a narrower part of the circular, or rephrase the question."
+        answer = clean_llm_html(strip_think(response.choices[0].message.content))
+
+        # Number-hallucination guard: flag any figure in the answer that
+        # doesn't actually appear in the retrieved source context (e.g. the
+        # model restating "₹10,000" as "₹2,10,000"), and separately flag any
+        # currency symbol swap (e.g. "₹" becoming "€") which check_numbers
+        # alone can miss since it strips symbols before comparing digits.
+        unverified = check_numbers(answer, context)
+        currency_issues = check_currency_symbols(answer, context)
+
+        if unverified or currency_issues:
+            warning_parts = []
+            if unverified:
+                warning_parts.append(f"figures not matched in source: {', '.join(unverified)}")
+            if currency_issues:
+                warning_parts.append("; ".join(currency_issues))
+            answer += (
+                f"\n\n⚠️ **Unverified content:** {' | '.join(warning_parts)} — "
+                f"please cross-check against the official OC document before "
+                f"relying on this."
             )
-        return content
+        return answer
     except Exception as e:
         error_str = str(e)
+        if LLM_PROVIDER == "ollama" and (
+            "Connection" in error_str or "refused" in error_str.lower() or "not found" in error_str.lower()
+        ):
+            return (
+                f"⚠️ Couldn't reach the local Ollama model `{model}` at "
+                f"{OLLAMA_BASE_URL}. Make sure Ollama is running (`ollama serve`) "
+                f"and the model is pulled (`ollama pull {model}`)."
+            )
         if "model_permission_blocked" in error_str or "403" in error_str:
             return (
                 f"⚠️ The model `{model}` is blocked on your Groq account. "
@@ -455,9 +660,10 @@ def main():
         return
 
     collection = load_collection()
-    groq_client = load_groq_client()
+    llm_client = load_llm_client()
 
-    if groq_client is None:
+    if llm_client is None:
+        # Only reachable on the Groq backend without a key (Ollama needs none).
         st.warning(
             "GROQ_API_KEY not set. Get a free key from https://console.groq.com "
             "and run:\n\n`export GROQ_API_KEY=\"your-key-here\"`\n\n"
@@ -539,14 +745,18 @@ def main():
                 "For a full document summary, mention the OC number directly "
                 "(e.g. 'summarize OC 220')."
             )
-            if "selected_model" not in st.session_state:
-                st.session_state.selected_model = GROQ_MODEL
+            if (
+                "selected_model" not in st.session_state
+                or st.session_state.selected_model not in ACTIVE_MODELS
+            ):
+                st.session_state.selected_model = DEFAULT_MODEL
             st.session_state.selected_model = st.selectbox(
                 "Model",
-                options=list(AVAILABLE_MODELS.keys()),
-                format_func=lambda m: AVAILABLE_MODELS[m],
-                index=list(AVAILABLE_MODELS.keys()).index(st.session_state.selected_model),
+                options=list(ACTIVE_MODELS.keys()),
+                format_func=lambda m: ACTIVE_MODELS[m],
+                index=list(ACTIVE_MODELS.keys()).index(st.session_state.selected_model),
             )
+            st.caption(f"Backend: **{LLM_PROVIDER}**")
             st.write(f"**Indexed chunks:** {collection.count()}")
             if st.button("🗑️ Delete this chat"):
                 del st.session_state.all_sessions[session_id]
@@ -661,9 +871,11 @@ I'll answer using the indexed circulars and always cite the OC number I'm drawin
 
         listing_year = detect_listing_year(query)
 
-        oc_number = extract_oc_number_from_query(query)
-        if not oc_number:
-            oc_number = extract_acronym_oc(query)
+        explicit_oc = extract_oc_number_from_query(query)
+        if explicit_oc:
+            target_ocs = [explicit_oc]
+        else:
+            target_ocs = extract_acronym_ocs(query)
 
         if listing_year:
             with st.spinner("Scanning full corpus..."):
@@ -693,12 +905,34 @@ I'll answer using the indexed circulars and always cite the OC number I'm drawin
             thinking_placeholder = st.empty()
             thinking_placeholder.markdown("_Thinking..._")
 
-            if oc_number:
-                docs, metas = retrieve_by_oc_number(collection, oc_number)
+            if target_ocs:
+                docs, metas = retrieve_by_oc_number(collection, target_ocs)
                 if not docs:
                     docs, metas = retrieve_semantic(collection, query)
             else:
                 docs, metas = retrieve_semantic(collection, query)
+
+            # Generic "P2P/P2M limit" queries need OC 120's Annexure A — the
+            # standardised-limits TABLE (e.g. Rs 1,00,000 per P2P transaction).
+            # That table lives in ONE specific chunk, so fetching a single
+            # arbitrary chunk (or skipping because some other chunk of 120 was
+            # already retrieved) misses it, and the LLM then anchors on an
+            # unrelated figure (e.g. the Rs 2,000 QR-share-&-pay sub-limit).
+            # Fetch the FULL forced OC(s) and place them FIRST so the limits
+            # table survives the context cap, then append the semantic results
+            # (deduped) for the surrounding detail (24-hr limits, exclusions).
+            force_ocs = extract_limit_keyword_ocs(query)
+            if force_ocs:
+                f_docs, f_metas = retrieve_by_oc_number(collection, force_ocs)
+                seen = set(f_docs)
+                merged_docs = list(f_docs)
+                merged_metas = list(f_metas)
+                for d, m in zip(docs, metas):
+                    if d not in seen:
+                        seen.add(d)
+                        merged_docs.append(d)
+                        merged_metas.append(m)
+                docs, metas = merged_docs[:MAX_CONTEXT_CHUNKS], merged_metas[:MAX_CONTEXT_CHUNKS]
 
             if not docs:
                 answer = "I couldn't find any relevant circulars for this question in the indexed corpus."
@@ -721,11 +955,11 @@ I'll answer using the indexed circulars and always cite the OC number I'm drawin
                         }
                     )
 
-                if groq_client:
-                    selected_model = st.session_state.get("selected_model", GROQ_MODEL)
-                    if context_is_relevant(groq_client, query, context, model=selected_model):
+                if llm_client:
+                    selected_model = st.session_state.get("selected_model", DEFAULT_MODEL)
+                    if context_is_relevant(llm_client, query, context, model=selected_model):
                         answer = generate_answer(
-                            groq_client,
+                            llm_client,
                             query,
                             context,
                             session["llm_history"],

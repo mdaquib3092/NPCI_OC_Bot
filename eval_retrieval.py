@@ -36,7 +36,11 @@ COLLECTION_NAME = "npci_oc_chunks"
 EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
 TEST_SET_PATH = "eval_test_set.csv"
 RESULTS_PATH = "eval_retrieval_results.csv"
-GROQ_MODEL = "openai/gpt-oss-20b"
+from config import ACRONYM_TO_OC, GROQ_MODEL
+from hybrid_search import HybridSearcher
+
+# Global Searcher instance
+searcher = HybridSearcher()
 
 TOP_K = 10
 
@@ -70,28 +74,36 @@ def extract_cited_ocs(answer: str) -> list:
 
 
 def extract_oc_number_from_query(query: str) -> str:
-    match = re.search(r"\bOC[\s\-]?0*(\d+[A-Z]?)\b", query, re.IGNORECASE)
-    if match:
-        return match.group(1).upper()
+    """Detect an explicit OC or circular number reference in the user's query,
+    e.g. 'OC 76', 'OC-220', 'circular 120', 'circular no. 185A'."""
+    patterns = [
+        r"\bOC[\s\-]?0*(\d+[A-Z]?)\b",
+        r"\bCircular[\s\-]?No\.?[\s\-]?0*(\d+[A-Z]?)\b",
+        r"\bCircular[\s\-]?0*(\d+[A-Z]?)\b",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, query, re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
     return ""
 
 
-# Domain acronyms whose full meaning embeddings don't always capture well —
-# map them directly to the OC number(s) that define them.
-ACRONYM_TO_OC = {
-    "udir": "165",
-    "odr": "145",
-    "afa": "151",
-    "tpap": "159",
-}
+# ACRONYM_TO_OC is imported from config.py.
 
 
-def extract_acronym_oc(query: str) -> str:
+
+def _acronym_pattern(term: str) -> str:
+    parts = [re.escape(p) for p in term.split()]
+    return r"\b" + r"[\s\-]+".join(parts) + r"\b"
+
+
+def extract_acronym_ocs(query: str) -> list:
+    """Most specific acronym/term match (longest key first) -> its OC list."""
     lower = query.lower()
-    for acronym, oc in ACRONYM_TO_OC.items():
-        if re.search(rf"\b{acronym}\b", lower):
-            return oc
-    return ""
+    for term in sorted(ACRONYM_TO_OC, key=len, reverse=True):
+        if re.search(_acronym_pattern(term), lower):
+            return ACRONYM_TO_OC[term]
+    return []
 
 
 def load_collection():
@@ -111,18 +123,21 @@ def retrieve(collection, question: str, top_k: int = TOP_K):
         if docs:
             return docs, metas
 
-    acronym_oc = extract_acronym_oc(question)
-    if acronym_oc:
-        results = collection.get(where={"oc_number": acronym_oc}, limit=50)
+    acronym_ocs = extract_acronym_ocs(question)
+    if acronym_ocs:
+        where = (
+            {"oc_number": acronym_ocs[0]}
+            if len(acronym_ocs) == 1
+            else {"oc_number": {"$in": acronym_ocs}}
+        )
+        results = collection.get(where=where, limit=50 * len(acronym_ocs))
         docs = results.get("documents", [])
         metas = results.get("metadatas", [])
         if docs:
             return docs, metas
 
-    results = collection.query(
-        query_texts=[question], n_results=top_k, where={"category": "UPI"}
-    )
-    return results["documents"][0], results["metadatas"][0]
+    docs, metas = searcher.search(collection, question, top_k=top_k)
+    return docs, metas
 
 
 def read_csv_robust(path):

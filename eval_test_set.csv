@@ -1,15 +1,57 @@
-question,expected_oc_number,expected_keywords,notes,
-What is the current UPI Lite wallet limit?,205,"wallet limit,auto top-up",Pin less transactions under ₹ 500 and lite balance limit of ₹2000. ,
-What is the current UPI Lite per-transaction limit?,169,"500,transaction limit","OC 169 enhancement of  OC 205, in which limit of ₹500 per transaction raised to ₹1000. And balance limit increase to ₹5000. ",
-What is the UPI AutoPay AFA limit?,151,"AFA,limit,enhancement","OC 151 has increase the limit of ₹5000 to ₹15000 per transaction, more than ₹15000 issuer bank should validate digital signature and api pin, for less ₹15000 DS only will work. ",
-What is the settlement cycle change mentioned in recent circulars?,197,"settlement,cycle,10","OC 197 - 10 settlement cycles, and business cutover 24hrs to 24 hrs",
-What is UDIR and what does it do?,165,"complaint,dispute,resolution","pre-approved online refund, via refund api, real time check transaction status. ",
-What is the P2P transaction limit change?,"181, 181B","P2P,limit","Previously, under UPI - OC181 - FY-23-24 - Compliance to Merchant Onboarding in UPI and Usage Limits.pdf, the limit for receiving funds via P2P in a 24-hour period was capped at either 25 successful transactions or a cumulative amount of ₹4 lakhs. The current update, as outlined in UPI - OC No. 181-B - FY-24-25 – Addendum to OC-181-A – Implementation of UPI Limits for P2P transactions.pdf, retains this existing structure but adds a new, independent layer of restriction: a total cap of 50 successful P2P transactions within a 24-hour period, regardless of the individual transaction values. Effectively, users must now monitor both the existing monetary/count threshold and this new, separate volume-based cap.",
-What is the maximum inward credit limit for P2PM merchants?,192,"inward credit,P2PM","Per transaction: Rs. 10,000 , Cumulative per day (24 hours): Rs. 25,000 , Cumulative per month (30 days): Rs. 1,00,000",
-why is it necessary for other players to scale up their consumer outreach?,159,"Concentration risk, systemic risk, balanced ecosystem, competitive, market equilibrium","It is necessary for new and existing players (both Banks and Non-Banks) to scale up their outreach to ensure the growth of UPI, achieve multi-fold penetration, and reach overall market equilibrium.",
-What are the primary differences in transaction authorization between Full Delegation and Partial Delegation?,201,"initiate, complete, UPI PIN, spend limits, delegation","n Full Delegation, the secondary user is authorized to both initiate and complete transactions independently, subject to defined spend limits. In Partial Delegation, the secondary user can only initiate payment requests, while the primary user must manually complete the transaction by entering their UPI PIN.",
-Are there any specific exclusions regarding the transaction limits?,"181, 181B","P2P credit , individual transactions valued , ","Yes, in the context of the limit where P2P credit is capped at 25 successful transactions or ₹4 lakhs in 24 hours, any individual transactions valued at less than ₹2,000 are excluded from these counts.",
-What specific action must be taken if a P2PM merchant exceeds the monthly credit limit for three consecutive months?,192,"P2M category, formally acquired, Payee PSP, applicable MCC.",The merchant must be formally acquired by the Payee PSP under the P2M category with the applicable Merchant Category Code (MCC).,
-"Does the P2PM category apply to all merchant types, and what is its primary purpose?",192,"Small merchants, unorganised retail sector, instant credit, own account.","The P2PM category is designed specifically for small merchants and the unorganised retail sector to bring them into the digital framework, and it is applicable only for merchants receiving instant credit for UPI payments into their own accounts.",
-What are the security protocols for IoT devices and software profiles when linked to a UPI Circle?,"201, 201A, 201B","cooling period, 24 hours, proximity, INR 5,000, daily transaction limit, auto-revoke.","Linking requires the primary and secondary devices to be in close proximity. There is a 24-hour cooling period after linking with a restricted daily transaction limit of INR 5,000. Furthermore, authorization for an IoT device is subject to auto-revocation if the delegation remains inactive for 6 months or if security issues like device tampering are detected.",
-What visibility does a Primary User maintain over their UPI Circle participants?,"201, 201A, 201B","visibility, transactions, UPI App, bank account statement","The Primary User is guaranteed visibility of all transactions performed by their secondary users or linked IoT devices, which is accessible directly through the Primary User's UPI App and their bank account statement.",
+question,expected_oc_number,expected_keywords,notes
+What is the current per transaction limit for capital markets category in UPI?,185B,"5 lakh, capital markets, per transaction, verified merchant","Current-state query; must pick latest addendum 185B (eff 15 Sep 2025), not older 82/127"
+What was the UPI transaction limit for specific categories introduced in March 2020?,82,"2 lakh, specific categories, per transaction","Historical query; must retrieve OC 82 dated 3 March 2020, not later circulars"
+When was the Rs 5 lakh per transaction limit first introduced in UPI and for which categories?,127,"5 lakh, retail direct, ipo, december 2021","Historical origin query; OC 127 dated 9 Dec 2021"
+UPI mein abhi insurance premium payment ki maximum limit kitni hai?,185B,"5 lakh, insurance, 10 lakh, 24 hours","Hinglish current-limit query; tests language robustness + latest addendum retrieval"
+What is the daily aggregate limit for credit card bill payments via UPI?,185B,"credit card, 6 lakh, daily, per transaction, 5 lakh","Tests category-specific detail; CC bill daily cap differs (6L) from other categories (10L)"
+What is the per transaction limit for jewellery purchases on UPI?,185B,"jewellery, 2 lakh, per transaction","Tests lower-cap category within the same circular"
+What is the P2PM category in UPI and when was it introduced?,70,"p2pm, small merchants, unorganised, june 2019","Definition + origin; OC 70 dated 17 June 2019"
+What is the maximum monthly inward credit limit for P2PM merchants?,192,"p2pm, inward credit, monthly, limit","OC 192 dated 28 Mar 2024 implements max inward credit limits"
+Chhote dukandar jo P2PM category mein hain unki payment receive karne ki limit kya hai?,192,"p2pm, inward credit, monthly","Hinglish paraphrase of P2PM limit query"
+What is the P2P transaction limit on UPI?,181B,"p2p, 1 lakh, limit, 24 hours","OC 181-B implements UPI limits for P2P transactions"
+Which circular revised transaction limits based on merchant and transaction types?,76,"transaction limits, merchant type, revision","OC 76 (2019) is the base circular; addendums 76A/76B/76C exist"
+What are the latest changes to merchant-type based transaction limits?,76C,"addendum, transaction limits, merchant, revision","Must retrieve latest addendum 76C (FY 2025-26) in the 76 chain"
+Which circular standardized UPI transaction limits across the ecosystem?,120,"limit standardization, standardisation, upi","OC 120 (2021) UPI Limit Standardization"
+Which circular covers safeguarding the UPI ecosystem with revision of transaction limits?,132,"safeguarding, transaction limits, revision","OC 132 (2021-22)"
+What was the enhanced limit for IPO applications through UPI ASBA in 2019?,,"2 lakh, asba, ipo, enhancement","File: Circular-Enhancement-2Lakhs-UPI-ASBA (2019); no clean OC number in filename - tests retrieval by content"
+What is the transaction limit when using UPI for tax payments?,185A,"tax payments, 5 lakh, verified merchant","OC 185A (FY 24-25) raised tax payment limit to 5L eff 15 Sep 2024"
+What was the per transaction limit in UPI Lite when it was launched?,138,"upi lite, 200, on-device, wallet, 2000","OC 138 (Mar 2022) introduced Lite with Rs 200/txn and Rs 2000 balance"
+What is the current UPI Lite per transaction limit and wallet balance limit?,169A,"upi lite, 1000, 5000, balance","OC 169-A enhancement; must not return launch-era 200/2000 values"
+UPI Lite ki limit 500 rupaye kab hui thi?,169,"upi lite, 500, enhancement","Hinglish historical query; OC 169 (2023) raised Lite txn limit to Rs 500"
+What are the AutoPay AFA limit enhancements in UPI?,151A,"autopay, afa, limit, enhancement, mandate","OC 151 base + 151A enhancement of AutoPay limits"
+Which circular introduced UPI AutoPay dishonor handling for insufficient funds?,125,"autopay, dishonor, insufficient funds, mandate","OC 125 (Nov 2021); 125A addendum covers loan/EMI non-revocation"
+Can a customer revoke a UPI AutoPay mandate created for loan EMI repayment?,125A,"non-revocation, loan repayment, emi, mandate, autopay","OC 125A addendum specifically restricts revocation for loan/EMI category"
+What are the transaction limits for international UPI payments (UPI Global)?,177,"upi global, international, acceptance, limits","OC 177 UPI Global acceptance limits"
+Which circular allows international merchant payments acceptance through UPI?,117,"international, merchant, acceptance","OC 117 (2021)"
+What is UPI Circle and who can use delegated payments?,201A,"upi circle, delegated payments, secondary user, full delegation","Original OC 201 may be absent; 201-A (full delegation requirements) is in corpus - tests graceful partial answer"
+Which circular introduced pre-sanctioned credit lines on UPI?,171,"credit line, pre-sanctioned, banks","OC 171 (2023)"
+How does CBDC and UPI interoperability work as per NPCI circulars?,170,"cbdc, digital rupee, interoperability, qr","OC 170 + 170-A/170-B addendums"
+What is UPI Tap and Pay?,186,"tap and pay, nfc, mode of payment","OC 186 (2023-24)"
+Which circular discontinued UPI collect requests for P2P transactions?,220,"collect request, p2p, discontinu","OC 220 (FY 25-26)"
+What is the timeline for UPI transaction response time reduction?,214,"response time, reduction, seconds","OC 214 (FY 25-26)"
+How many balance inquiry API calls are allowed per app per day in UPI?,215A,"balance inquiry, api, limit, per day","OC 215/215A guidelines on usage of UPI APIs"
+What are the rules for Check Transaction API usage in UPI?,215,"check transaction, api, status, misuse","OC 215 streamlining check transaction initiation"
+What is the process for handling chargebacks for wrong account transfers in UPI?,41,"chargeback, wrong account, transfer","Circular 41 (2017); tests old-corpus retrieval"
+Which circular modified UPI chargeback rules and procedures most recently?,184B,"chargeback, rules, procedures, modification","Chain: 184 -> 184A -> 184B; must return latest"
+What is UDIR in UPI and which circular introduced enhanced complaint handling?,98,"udir, complaint, resolution, dispute","Circular 98 (2020)"
+What is the final implementation timeline circular for ODR complaint handling in UPI?,145,"odr, complaint, timeline, resolution","OC 145 + 145A reminder"
+What is the revised TAT for UPI disputes?,198,"disputes, tat, turnaround, revision","OC 198 (FY 24-25) Revision of Disputes TAT"
+Which circular enables auto acceptance and rejection of chargebacks in UPI?,213,"auto acceptance, rejection, chargeback","OC 213 (FY 24-25)"
+How are UPI refunds processed as per NPCI guidelines?,148,"refunds, processing, credit","OC 148 (2022)"
+What are the guidelines for Third Party Application Providers in UPI?,97,"tpap, guidelines, third party","OC 97 (2020)"
+What is the volume cap for TPAPs in UPI?,210,"volume cap, tpap, 30, market share","OC 159 (2022) and OC 210 (FY 24-25); latest is 210 - either acceptable but prefer 210"
+Which circular introduced Aadhaar OTP authentication for UPI onboarding?,116,"aadhaar, otp, authentication, onboarding, debit card","OC 116 + 116A addendum"
+What is the token validity period in UPI as per NPCI revision?,110,"token, validity, 90 days, 30 days","OC 110 revised token validity from 30 to 90 days"
+What is the Numeric UPI ID Mapper / UPI Number?,115,"numeric upi id, mapper, upi number","OC 115 + addendums 115A-115E; base answer from 115"
+Which circular introduced B2B as a separate category in UPI?,96,"b2b, separate category, merchant ecosystem","OC 96 (2020)"
+Which circular covers MCC standardisation in UPI?,34,"mcc, merchant category code, standardisation","OC 34 (2017); tests old-corpus retrieval"
+When were UPI settlement cycles increased to 10?,197,"settlement cycles, 10, business day, cutover","OC 197 (FY 24-25)"
+What are the guidelines for deactivation of inactive UPI IDs?,180,"deactivation, inactive, upi id, upi number","OC 180 (FY 23-24)"
+Can NRI accounts be used on UPI?,60,"nr accounts, non-resident, imps, upi","Circular 60 (2018) + OC 161 extension (161 may be missing from corpus - note graceful handling)"
+Which circular mandates capturing customer location on UPI apps?,153,"customer location, geo, capture, apps","OC 153 (2022)"
+What is the interchange fee on UPI transactions for normal bank account payments?,,"interchange, ppi, wallet, no charge, bank account","Partially out-of-corpus (OC 160 missing); bot should answer carefully or say limited info - tests hallucination control"
+What is the UPI limit for buying a car worth 12 lakh from a dealer?,185B,"5 lakh, per transaction, category, verified merchant","Reasoning query; no direct category - bot should explain category-based limits and not invent a car category"
+Mujhe apni dukaan par UPI se 60000 rupaye mahine receive karne hain - P2PM chalega ya P2M lena padega?,192,"p2pm, inward credit, monthly, p2m, limit","Hinglish reasoning query combining P2PM monthly cap with merchant category choice"
+What is the penalty process for NPCI compliance violations in UPI?,155,"penalty, waiver, compliance, process","OC 155 (2022) penalty waiver request process"
+Who is the current CEO of NPCI?,,"not available, circular, cannot","Out-of-scope test; corpus has no such info - bot must not hallucinate and should say it answers from circulars only"
+What is the RBI repo rate?,,"not available, out of scope","Out-of-scope test; expected behaviour is polite refusal / scope statement"

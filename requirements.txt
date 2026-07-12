@@ -1,6 +1,9 @@
 # PDF text extraction
 pypdf==4.3.1
 
+# DOCX text extraction (attached-document support in app.py)
+python-docx==1.1.2
+
 # OCR fallback for scanned PDFs
 pytesseract==0.3.13
 pdf2image==1.17.0
@@ -8,17 +11,19 @@ pdf2image==1.17.0
 # Embeddings for semantic search
 sentence-transformers==3.0.1
 
-# Embeddings for semantic search
-sentence-transformers==3.0.1
-
 # Vector search
 chromadb==0.5.5
+
+# Keyword (BM25) side of hybrid retrieval (hybrid_search.py)
+rank-bm25==0.2.2
 
 # App UI
 streamlit>=1.41.0
 
-# LLM for chat/summarization (Groq free tier)
+# LLM backends: Groq (cloud) and any OpenAI-compatible endpoint incl. local
+# Ollama (openai SDK). Backend is selected via LLM_PROVIDER in config.py.
 groq==0.9.0
+openai>=1.40.0
 httpx==0.27.2
 
 # Utilities
