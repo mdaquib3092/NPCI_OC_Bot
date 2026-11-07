@@ -1,4 +1,5 @@
-# PDF text extraction
+# PDF text extraction (PyMuPDF reads text and tables; pypdf kept for compatibility)
+pymupdf>=1.24
 pypdf==4.3.1
 
 # DOCX text extraction (attached-document support in app.py)
@@ -20,9 +21,8 @@ rank-bm25==0.2.2
 # App UI
 streamlit>=1.41.0
 
-# LLM backends: Groq (cloud) and any OpenAI-compatible endpoint incl. local
-# Ollama (openai SDK). Backend is selected via LLM_PROVIDER in config.py.
-groq==0.9.0
+# LLM backends: Groq (cloud) and local Ollama, both through the OpenAI-compatible SDK.
+# Backend is selected with LLM_PROVIDER (see README).
 openai>=1.40.0
 httpx==0.27.2
 

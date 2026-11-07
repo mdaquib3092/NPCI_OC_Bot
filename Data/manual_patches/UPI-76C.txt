@@ -1,0 +1,12 @@
+[REPLACE_AFTER: Sr. No Description]
+(Manual correction: the OCR text of this table is scrambled and puts row numbers inside sentences. The table was transcribed from the page image.)
+
+| Sr. No | Description | Circular reference and remarks |
+|---|---|---|
+| 1 | Payer PSP shall ensure P2P Intent based transactions (Initiation mode '04' and '05') shall be disallowed. | NPCI/UPI/2019-20/OC/76, NPCI/UPI/2023-24/OC76A & NPCI/UPI/20234-25/OC76B (Existing No change) |
+| 2 | Payee PSP shall ensure Intent based transactions (Initiation mode '04' or '05') shall be disallowed for all 'Offline' non-verified merchants. | NPCI/UPI/2019-20/OC/76, NPCI/UPI/2023-24/OC76A & NPCI/UPI/20234-25/OC76B (Existing No change) |
+| 3 | QR share & Pay shall have a limit of INR 2000/- for all P2P transactions (Payer PSP to ensure that UPI app to identify the same). | NPCI/UPI/2019-20/OC/76, NPCI/UPI/2023-24/OC76A & NPCI/UPI/20234-25/OC76B (Existing No change) |
+| 4 | Domestic: QR share & Pay shall have a limit of INR 2000/- for all P2M (non-verified offline merchants) and Payer PSP to ensure that Payer UPI app identify the same. International: QR share & Pay shall not be allowed for all UPI Global P2M transactions and Payer PSP to ensure that Payer UPI app identify the same. | NPCI/UPI/2019-20/OC/76, NPCI/UPI/2023-24/OC76A & NPCI/UPI/20234-25/OC76B (Modification for International) |
+| 5 | Wallet load, Gift/Prepaid cards (MCC 6540) shall continue to be disallowed on 'collect' and QR mode payments as per the extant guidelines. | NPCI/UPI/2019-20/OC/76, NPCI/UPI/2023-24/OC76A & NPCI/UPI/20234-25/OC76B (Existing No change) |
+
+All stakeholders to take cognizance of the above guidelines and ensure compliance effective 30th April 2025.

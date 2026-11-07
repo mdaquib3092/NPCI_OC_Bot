@@ -6,58 +6,34 @@ An unofficial, open-source, educational RAG (Retrieval-Augmented Generation) cha
 
 ## Features
 
-- **Hybrid retrieval** — BM25 keyword search + dense vector search fused with Reciprocal Rank Fusion (`hybrid_search.py`), so identifier-dense text (e.g. `OC 181B`, `MCC 7407`, `P2PM`) and paraphrased/conceptual queries both retrieve well
-- **Pluggable LLM backend** — run against **Groq** (cloud) or a local **Ollama** model, selected via `LLM_PROVIDER` in `config.py`. Ollama keeps everything on-device (privacy) with no API key or rate limits
-- LLM-generated summaries and Q&A, grounded only in retrieved context
-- **Number-fidelity guard** (`number_guard.py`) — flags any figure or currency symbol in an answer that doesn't match the source text, to catch misstated compliance limits
-- OC-number-aware retrieval (e.g. "summarize OC 220" fetches the full circular, not just top-k chunks)
-- Domain acronym/term routing (UDIR, ODR, AFA, TPAP, P2PM, UPI Lite, AutoPay, …) mapped to the defining OC families in `config.py`, incl. supersession-chain awareness so "current limit" queries surface the latest circular
-- "List all OCs in \<year\>" structured metadata queries
-- Multi-conversation chat sidebar with persistent history
-- File attach (PDF/DOCX) — the uploaded document is used as extra context for that question
-- 👍/👎 feedback with optional comments, logged to Google Sheets
+- **Answers with proper references.** Every answer lists its sources with the exact quote and a reference a reader can look up, for example `UPI Consolidated Circular (18 Sep 2026), clause 14.24.4, p. 22` or `OC 185B (28 Aug 2025), p. 2`.
+- **Limits and MCC lookups come from reviewed facts, not from a model.** A table of every limit kind (per transaction, collect, QR, 24-hour, monthly, credit received) with its OC and effective date; kinds no circular sets are shown as "No indexed OC sets this". Earlier and withdrawn limits are labelled.
+- **Fail closed.** A model-written answer (summaries, definitions, general questions) is shown only if a checker verifies that every quote is in the cited circular, every number appears in a quote, and every OC it mentions exists in the evidence. Otherwise the user gets source passages, never an unverified answer.
+- **Withdrawn and member-only circulars are known.** OCs withdrawn by the UPI Consolidated Circular are flagged; OCs NPCI lists without a public PDF are reported as existing but not readable.
+- **English and Hinglish**, clarifying buttons for ambiguous questions, refusals for out-of-scope and bank-specific questions, and anonymous 👍/👎 feedback with reasons (question text is sent only if the user agrees).
+- **Pluggable LLM**: local Ollama (default), Groq, or none (limits and codes still work).
+- Chat history stays in the browser session; nothing is stored on the server.
 
 ## Architecture
 
 ```
-PDF (manually collected)
-  → generate_manifest.py → extract.py → chunk.py → embed.py   (offline pipeline)
-  → Data/chroma_db/ (vector index) + Data/chunks.jsonl (BM25 source)
-  → app.py  (Streamlit chatbot: hybrid retrieval + LLM generation)
+PDF (public circulars, kept locally)
+  → python -m ingest.build         (extract → registry → chunks → facts + code scan → gates → index)
+  → Data/registry.csv, facts.csv, code_mentions.csv, chunks.jsonl, chroma_db/
+  → core/pipeline.py: router → evidence → writer → checker   (app.py is a thin Streamlit UI)
 ```
 
-**Core (runtime):**
+**Runtime (`core/`):** `router.py` (what is being asked), `evidence/` (facts, codes, documents, hybrid search), `writer.py` (deterministic builders and the model prompt), `checker.py` (verification), `pipeline.py`, `llm.py`, `phrases.py`, `reference.py`, `feedback.py`.
 
-| Module | Purpose |
-|---|---|
-| `app.py` | Streamlit chatbot UI — hybrid retrieval, acronym/OC routing, generation |
-| `config.py` | Central config: LLM backend selection, acronym→OC map, model lists |
-| `hybrid_search.py` | BM25 + vector retrieval fused with Reciprocal Rank Fusion |
-| `number_guard.py` | Post-generation check that figures/currencies match the source |
+**Offline (`ingest/`):** `extract.py`, `headers.py`, `registry.py`, `chunk.py`, `patches.py`, `facts.py`, `codes.py`, `not_public.py`, `index.py`, `build.py`, `review.py`.
 
-**Offline pipeline (rebuild the index):**
+**Evaluation (`eval/`):** `gold_set.csv` with `run_eval.py` (answers), `retrieval_set.csv` with `run_retrieval.py` (search hit rate), `show.py` (print one answer).
 
-| Script | Purpose |
-|---|---|
-| `generate_manifest.py` | Scans `Data/raw_pdfs/` and builds `Data/manifest.csv` (OC number, FY, category) |
-| `extract.py` | Extracts text from each PDF (reusing OCR cache from `scripts/ocr_pdf.py` for scanned docs) |
-| `chunk.py` | Splits text into overlapping chunks, strips administrative boilerplate |
-| `embed.py` | Embeds chunks (sentence-transformers) into a persistent ChromaDB index |
-| `rebuild_corpus.py` | One-command runner for the four steps above, with duplicate detection |
-
-**Evaluation:**
-
-| Script | Purpose |
-|---|---|
-| `eval_retrieval.py` | Retrieval hit-rate + answer-faithfulness against `eval_test_set.csv` |
-| `eval_ab_hybrid.py` | A/B compares pure-vector vs hybrid retrieval |
-| `build_regression_set.py` | Turns 👎 feedback exports into regression-test candidates |
-
-One-off maintenance/debug utilities live in [`scripts/`](scripts/).
+Design documents: [`docs/PRD.md`](docs/PRD.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/FSD.md`](docs/FSD.md), [`docs/M2_PLAN.md`](docs/M2_PLAN.md). One-off utilities are in [`scripts/`](scripts/).
 
 ## Data Sourcing
 
-Circular PDFs are **manually downloaded** from NPCI's public website (not scraped), out of respect for NPCI's `robots.txt`, which disallows automated crawling by unnamed/custom bots. Raw PDFs are not included in this repository — only the pre-built vector index (`Data/chroma_db/`) is committed, since that's all the deployed app needs to run.
+Circular PDFs are public NPCI documents, collected either manually from NPCI's public website or from the Internet Archive's Wayback Machine (see `oc_scrapper/`), not by crawling npci.org.in directly. Raw PDFs are not included in this repository. The reviewed registry, the chunks, and the pre-built vector index (`Data/chroma_db/`) are committed, since that's all the deployed app needs to run.
 
 ## Setup
 
@@ -77,65 +53,62 @@ brew install tesseract poppler
 
 ### 2. Choose an LLM backend
 
-The backend is set by `LLM_PROVIDER` in `config.py` (override with an env var). Pick one:
-
-**Option A — Groq (cloud, fast):** sign up at [console.groq.com](https://console.groq.com), create an API key, then:
+Limits, MCC lookups and refusals are answered from reviewed facts in code and need **no** model. The model is used only for summaries, definitions and general questions, and its answer is shown only if the checker verifies its quotes and numbers. Set the backend with environment variables:
 
 ```bash
+# Local, private, no key (default): install Ollama, then
+ollama pull qwen3:8b
+export LLM_PROVIDER=ollama
+export OLLAMA_MODEL=qwen3:8b
+
+# or Groq (cloud)
 export LLM_PROVIDER=groq
 export GROQ_API_KEY="your-key-here"
+
+# or no model at all: facts-backed answers still work, other questions show source passages
+export LLM_PROVIDER=none
 ```
 
-The free tier is rate-limited (8,000 tokens/minute); use a paid tier for sustained traffic.
-
-**Option B — Ollama (local, private, no key, no rate limits):** install [Ollama](https://ollama.com), pull a model, then:
-
-```bash
-ollama pull qwen3:14b          # or qwen3:8b for less RAM
-export LLM_PROVIDER=ollama     # this is the default
-export OLLAMA_MODEL=qwen3:14b  # optional; matches config.py default
-```
-
-Retrieval always runs locally (sentence-transformers + ChromaDB); only answer generation uses the selected backend.
+Only facts a person has marked `human_verified` are served. While you are developing, `export ALLOW_UNVERIFIED_FACTS=1` also serves the auto-checked ones (the app then shows a warning).
 
 ## Running the Full Pipeline
 
 Only needed if you're adding new circulars or changing extraction/chunking logic. If you're just running the app against the existing index, skip to **Running the App**.
 
 ```bash
-# 1. Build the manifest (OC number, title, date, category) from raw_pdfs/
-python generate_manifest.py
-
-# 2. Extract text from each PDF (OCR fallback for scanned documents)
-python extract.py
-
-# 3. Chunk text into overlapping segments, stripping boilerplate
-python chunk.py
-
-# 4. Embed chunks into a searchable ChromaDB index
-python embed.py
-
-# 5. (Optional) Evaluate retrieval accuracy against eval_test_set.csv
-python eval_retrieval.py
+pip install -r requirements-dev.txt      # includes pytest
+python -m ingest.build                   # full build (extract → registry → chunk → gates → index)
+python -m ingest.build --skip-index      # data only, no embedding model (fast)
+python -m pytest -q tests                # unit tests
+python -m eval.run_eval --no-llm         # gold set (answers that need no model)
+python -m eval.run_retrieval             # search hit rate
 ```
 
-**When to re-run which step:**
+How it works:
+- PDFs go in `Data/raw_pdfs/upi/` (not in Git). New PDFs are added to `Data/registry.csv` as `drafted` rows; **review them** (title, date, OC number, supersession) and record corrections in `Data/review_log.csv`.
+- The build **stops** if a gate fails (empty title or date, broken supersession reference, duplicate id, a readable document with no chunks). Warnings list unreadable source files.
+- `Data/coverage_report.md` shows what is covered and the known gaps (including circulars cited by others but missing from the corpus); `Data/build_info.json` carries the build id.
+- **Facts (limits)** live in `Data/facts.csv`. Each has an exact quote that the build checks against the circular text. Review them with `python -m ingest.review export`, mark the sheet, then `python -m ingest.review import <file> --reviewer "Your name"`; only `human_verified` facts are served.
+- **Circulars NPCI lists but does not publish** (member-only): list them in a CSV (`oc_number,title,fy`) and run `python -m ingest.not_public <file.csv>`; the chatbot will say they exist but are not public.
+- OCR can misread amounts and tables. Where that happened, a transcription from the page image is stored in `Data/manual_patches/<doc_id>.txt` (see `ingest/patches.py`).
 
-| Change | Steps to re-run |
+| Change | What to run |
 |---|---|
-| Added new PDFs | 1 → 2 → 3 → 4 |
-| Changed chunking/cleaning logic | 3 → 4 |
-| Changed embedding model | 4 |
-| Only changed `app.py` (UI/logic) | None — just restart the app |
+| Added new PDFs | `python -m ingest.build`, then review the new registry rows |
+| Changed chunking/cleaning logic | `python -m ingest.build` |
+| Changed embedding model | `python -m ingest.build` (edit `ingest/paths.py`) |
+| Only changed `app.py` (UI/logic) | Nothing, just restart the app |
 
 ## Running the App
 
 ```bash
-# with the backend env vars from step 2 already exported
+# with the env vars from step 2 exported
 streamlit run app.py
 ```
 
-Open the local URL Streamlit prints (usually `http://localhost:8501`). The active backend and model are shown in the sidebar under **⚙️ Settings & info**.
+Open the local URL Streamlit prints (usually `http://localhost:8501`). The sidebar shows the build id, how recent the circulars are, and the model in use.
+
+The answering code lives in `core/` (`router.py`, `evidence/`, `writer.py`, `checker.py`, `pipeline.py`). Check it against the gold set with `python -m eval.run_eval` (add `--no-llm` to test only the model-free paths); `python -m eval.show "your question"` prints one answer.
 
 ## Deployment (Streamlit Community Cloud)
 

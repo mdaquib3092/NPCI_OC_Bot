@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: pip install -r requirements-dev.txt
+      - name: Unit tests
+        run: python -m pytest -q tests
+      - name: Gold set (no model; facts as committed)
+        env:
+          LLM_PROVIDER: none
+          ALLOW_UNVERIFIED_FACTS: "1"
+        # BM25 only, so CI needs no embedding model. Questions that need a language model are skipped.
+        run: python -m eval.run_eval --no-llm --no-vectors

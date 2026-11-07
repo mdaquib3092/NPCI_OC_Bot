@@ -1,0 +1,15 @@
+[REPLACE_AFTER: 1. As per the latest notification]
+1. As per the latest notification issued by RBI on 4th December 2024 vide circular no. RBI/2021-22/146 CO.DPSS.POLC.No.S1264/02-14-003/2021-2022 with subject 'Framework for Facilitating Small Value Digital Payments in Offline Mode', for UPI LITE, the enhanced limits shall be ₹1,000 per transaction with ₹5,000 being the total limit. Replenishment of used limit shall be allowed only in online mode with AFA. Customer will further have the option to set Auto Top-up for limit replenishment as per NPCI circular, 'Introduction of Auto Top-up on UPI LITE', vide No. NPCI/UPI/OC No. 205/2024-25, dated 27th August 2024. The details of the LITE limits are as below:
+
+(Manual correction: the OCR text of this circular misreads the rupee sign and the amounts in the table (for example "25,000" for ₹5,000). This text was transcribed from the page image.)
+
+| Description | UPI LITE Existing | UPI LITE New | UPI LITE X (Offline) - No Change |
+|---|---|---|---|
+| Per Transaction Limit | ₹500 | ₹1000 | ₹500 |
+| Total Limit at any point in time | ₹2000 | ₹5000 | ₹2000 |
+
+The new limits shall apply to and govern all existing NPCI circulars pertaining to UPI LITE limit (Annexure A). All the members are required to make the necessary changes pertaining to limit increase immediately.
+
+2. Issuer banks live on UPI LITE shall identify all the UPI LITE accounts that have had zero transactions in the past six months. Any balances in these dormant LITE accounts shall be refunded to the source bank account. Issuer banks shall implement the changes by 30th June 2025.
+
+Annexure A lists these NPCI circulars: 'Introduction of "On-Device wallet" - UPI LITE for Small Value Transactions' NPCI/UPI/OC No. 138/2021-22 dated 16th March 2022; 'Enhancement in UPI LITE transaction limit to ₹500' NPCI/UPI/OC No. 169/2023-24 dated 31st August 2023; 'Customer awareness and engagement for UPI LITE Enablement and Top-up' NPCI/UPI/OC No. 179/2023-24 dated 02nd November 2023; 'Introduction of UPI TAP & PAY mode of Payments' NPCI/UPI/OC No. 186/2023-24 dated 19th December 2023; 'Introduction of Auto Top-up on UPI LITE' NPCI/UPI/OC No. 205/2024-25 dated 27th August 2024.
