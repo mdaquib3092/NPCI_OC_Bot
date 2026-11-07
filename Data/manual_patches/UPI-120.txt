@@ -1,0 +1,21 @@
+[REPLACE]
+NPCI/UPI/OC-120/2021, 24th September 2021
+To, All UPI Members - Banks, PSPs & Third Party Applications
+Subject: UPI Limit Standardization
+
+(Manual correction: the OCR text of this circular garbles Annexure A. The body below is the OCR text with obvious character errors removed, and Annexure A was transcribed from the page image.)
+
+Standardization is the essence of Unified Payments Interface and has helped UPI to become very popular payments method in the country. Based on recent customer feedback, it has been observed that there is a need to standardize the transaction limits across ecosystem, to improve the overall customer experience of UPI.
+
+To facilitate the rich, standard and seamless digital payments experience for the UPI end user, it is essential to implement consistent per transaction limit for UPI, excluding NPCI standard risk rules, across all UPI members. NPCI has issued transaction limits guidelines in UPI/OC76/2019 dated 31st October 2019, UPI/OC82/2020 dated 3rd March 2020, and UPI/OC86/2020 dated 20th April 2020. Annexure A has limits that are to be standardized across all UPI ecosystem members. UPI members are advised to comply with above guidelines by 31st October 2021.
+
+Annexure A
+UPI Limits to be standardized across ecosystem
+
+| Txn Category | Txn Type | Txn Limits |
+|---|---|---|
+| P2P / P2PM | Collect | 2K |
+| P2M Non Verified Offline | 'Share Intent link & pay'; 'QR share & pay' | 2K |
+| P2P / P2PM | Pay | 1 Lakh |
+| P2M | All | 1 Lakh |
+| P2M Verified Specific Categories (OC 82, OC 96) | All | 2 Lakh |

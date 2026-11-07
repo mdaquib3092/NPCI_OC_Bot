@@ -1,0 +1,19 @@
+[REPLACE_AFTER: Subject: Enhancement]
+Subject: Enhancement in UPI LITE transaction limit to ₹500
+
+(Manual correction: the OCR text of this circular misreads the rupee sign and some amounts. This text was checked against the page image.)
+
+UPI LITE has been designed to play a vital role in reducing infrastructure load on the Core Banking System of the banks. This feature has been making the small value transactions faster and highly reliable for transaction value below ₹200.
+
+As per the latest circular issued by RBI on 24th August, 2023 vide Circular No: RBI/2023-24/57 CO.DPSS.POLC.No.S526/02-14-003/2023-24 with subject 'Enhancing transaction limits for Small Value Digital Payments in Offline Mode', the upper limit of an offline payment transaction is now increased from ₹200 to ₹500.
+
+In view of the above, the per transaction value limit for UPI LITE (Purpose code 44 - Online and 45 - Offline) has now been enhanced to ₹500. The details are as below:
+
+| UPI LITE Limit | Previous Limit | New Limit |
+|---|---|---|
+| Per Transaction | ₹ 200 | ₹ 500 |
+| Max balance in UPI lite account | ₹ 2000 | ₹ 2000 (No change) |
+
+The existing UPI pricing shall be applicable for transaction amount ₹201-₹500 for both P2P and P2M transactions.
+
+With reference to the above, Member Banks (Payee PSP), Third Party App providers (TPAPs), Merchants and other payment providers are requested to take note of the above enhancement and undertake requisite changes on the App & application systems. Members are requested to make the necessary changes with immediate effect.

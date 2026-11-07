@@ -54,3 +54,9 @@ Data/ocr_text/
 
 # Note: Data/chroma_db/ and Data/manifest.csv ARE committed intentionally —
 # the prebuilt vector index is what the deployed app actually needs to run.
+Data/text_cache/
+
+# Raw PDFs fetched by oc_scrapper/ (public documents, kept local like Data/raw_pdfs/)
+oc_scrapper/npci_upi_circulars/
+Data/_replaced_truncated/
+Data/review/

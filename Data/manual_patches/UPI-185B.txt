@@ -1,0 +1,23 @@
+[REPLACE_AFTER: Below are the categories where higher limits are extended]
+Below are the categories where higher limits are extended
+
+(Manual correction: the OCR text of this table is scrambled. This table was transcribed from the page image of Annexure I.)
+
+| Sr No | Categories | Merchant Category / Identifier | Enhanced Limits (per transaction) | Cumulative Limits (24 hrs) * |
+|---|---|---|---|---|
+| 1 | Capital Market | 6211 | ₹ 5 Lakh | ₹ 10 Lakh |
+| 2 | Insurance | 5960 | ₹ 5 Lakh | ₹ 10 Lakh |
+| 2 | Insurance | 6300 | ₹ 5 Lakh | ₹ 10 Lakh |
+| 2 | Insurance | 6529 | ₹ 5 Lakh | ₹ 10 Lakh |
+| 3 | Government e-Market Place (EMD Payments) | 9311 | ₹ 5 Lakh | ₹ 10 Lakh |
+| 4 | Travel | 4722 | ₹ 5 Lakh | ₹ 10 Lakh |
+| 5 | Credit Card Bill Payments | 5413 | ₹ 5 Lakh | ₹ 6 Lakh |
+| 6 | Collections | 7322 | ₹ 5 Lakh | ₹ 10 Lakh |
+| 7 | Business/Merchant (Including Pre-Approved Payments) | Payer MCC shall not be 0000 and Purpose Code - 20 or 15 | ₹ 5 Lakh | NA |
+| 8 | Jewellery | 5944 | ₹ 2 Lakh | ₹ 6 Lakh |
+| 9 | FX Retail use case with BBPS Platform | MCC-6012; Purpose Code - BF (New Purpose Code for regular UPI transaction); Purpose Code - 01 (For One Time Mandate) | ₹ 5 Lakh | ₹ 5 Lakh |
+| 10 | Digital Account Opening for Term Deposits | 7410 (New MCC) | ₹ 5 Lakh | ₹ 5 Lakh |
+| 11 | Digital Account Opening - Initial Funding | 7409 (New MCC) | ₹ 2 Lakh | ₹ 2 Lakh |
+
+Notes
+1. * Issuing banks are required to ensure that such cumulative limits are kept at their end.

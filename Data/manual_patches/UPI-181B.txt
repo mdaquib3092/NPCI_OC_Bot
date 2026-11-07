@@ -1,0 +1,11 @@
+[REPLACE_AFTER: of transactions via P2P regardless of the transaction value.]
+of transactions via P2P regardless of the transaction value.
+
+(Manual correction: the OCR text of this table is scrambled. This table was transcribed from the page image.)
+
+| Sr No | Description | Circular Reference & Remarks |
+|---|---|---|
+| 1 | P2P credit is capped at 25 successful transactions OR cumulative Rs 4 lacs in a period of 24 hours and transactions < Rs 2,000 are excluded. | NPCI/UPI/OC 181A/2024-25 (Existing - No change) |
+| 2 | P2P credit will be capped at 50 successful transactions in a period of 24 hours | NPCI/UPI/OC 181B/2024-25 (New) |
+
+The mentioned changes shall be applicable with immediate effect and member banks are required to ensure the limits are implemented latest by 30th September 2024.

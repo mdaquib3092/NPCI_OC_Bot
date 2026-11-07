@@ -1,0 +1,11 @@
+[REPLACE_AFTER: a. 25 successful transactions AND]
+a. 25 successful transactions AND
+b. ₹ 4.0 lakh cumulative credit limit
+
+(Manual correction: the OCR text misreads the rupee sign in this limit. This part was checked against the page image.)
+
+The mentioned change is to be implemented by 10th December 2023.
+2. As per the NPCI guidelines, MCC 7407 has been assigned for P2PM category of merchant. Acquirers shall populate the correct MCC in the 'subCode' field of the merchant tag in UPI, use to identify the nature of merchant business. Acquirers are required to make the necessary changes for the same by 15th February, 2024.
+3. It is re-iterated that Merchant shall be on-boarded by the acquirer only under the category of P2M/P2PM and are hereby instructed that any wrong categorization of merchant under the category of P2P has to be corrected and tagged properly under P2M/P2PM as per the NPCI guidelines. The correct categorization needs to be completed by 10th December, 2023.
+
+It is also re-iterated that acquirers shall take the necessary due diligence and ensure hygiene as mentioned in the NPCI/UPI/Rupay/OC-118/2021-22 dated 8th September, 2021 for onboarding of merchants.

@@ -1,0 +1,14 @@
+{
+  "build_id": "20261107-0840-756866e",
+  "built_at": "2026-11-07 08:40 UTC",
+  "corpus_as_of": "2026-10-14",
+  "documents": 247,
+  "unreadable_documents": 0,
+  "not_public_documents": 7,
+  "chunks": 4279,
+  "facts": 82,
+  "facts_human_verified": 82,
+  "code_mentions": 118,
+  "embed_model": "all-MiniLM-L6-v2",
+  "indexed_chunks": 4279
+}

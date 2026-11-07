@@ -1,0 +1,8 @@
+[REPLACE_AFTER: In view of increasing adoption]
+In view of increasing adoption in the ecosystem, it has been decided to revise the per-transaction limit for On-Device Biometric Authentication (fingerprint, face, etc.) in UPI is hereby enhanced from ₹5,000 to ₹10,000, effective 07th August 2026.
+
+(Manual correction: the OCR text misreads the rupee sign and the amounts ("€5,000 to 210,000"). This paragraph was checked against the page image.)
+
+Issuer Banks, PSP Banks and UPI Applications to ensure adequate customer communication regarding the updated limit.
+
+All existing validations, compliance requirements, specifications, and regulatory guidelines shall continue to remain fully applicable, and participants are required to ensure adherence.

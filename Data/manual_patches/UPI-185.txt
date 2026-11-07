@@ -1,0 +1,13 @@
+[REPLACE_AFTER: In view of the above, the per transaction value limit in UPI has now been]
+In view of the above, the per transaction value limit in UPI has now been enhanced to ₹ 5 lakhs for merchants under categories aligned to hospitals and educational services. This enhanced limit shall only be applicable to 'Verified Merchants'.
+
+(Manual correction: the rupee sign in the OCR text was misread; this paragraph was checked against the page image.)
+
+To enable this enhancement:
+1. Banks/PSPs/UPI Apps shall ensure that per transaction limit has been enhanced for the above-mentioned categories of merchants.
+2. Acquiring entities shall ensure that merchants are added to the 'Verified Merchant' list after proper due diligence.
+3. Merchants shall ensure UPI as a payment mode is enabled for the increased limit for these categories.
+
+With reference to the above, Members (PSPs & Banks), UPI apps, Merchants and other payment providers are requested to take note of the above enhancement, undertake requisite changes.
+
+Members are requested to ensure compliance with the same by 10th January 2024.

@@ -1,0 +1,17 @@
+[REPLACE_AFTER: Annexure to OC 185A]
+Annexure to OC 185A
+Implementation of Rs 5 Lakh limit per transaction for specific categories in UPI
+
+(Manual correction: the OCR text of this table is scrambled and misreads one MCC. The table was transcribed from the page image.)
+
+Regarding circular no. NPCI/UPI/ 2024-25/OC-185A, which pertains to the implementation of a Rs 5 Lakh limit per transaction for verified merchants in specific categories in UPI -
+
+| Category | Identifier | Circular reference & Remarks |
+|---|---|---|
+| Tax Payments | MCC - 9311 | NPCI/UPI/2024-25/OC-185A (New) |
+| Hospitals and Educational Services | MCC - 8011, 8021, 8031, 8041, 8042, 8049, 8050, 8062, 8071, 8099, 0742, 8211, 8220, 8241, 8244, 8249, 8299 | NPCI/UPI/2023-24/OC-185 (Existing - No Change) |
+| IPO & G Sec through RBI Retail Direct Scheme (RDS) | MCC 6211, Purpose Code - 01 (IPO), 25 (RDS) | NPCI/UPI/OC-127/2021-22 (Existing - No Change) |
+
+Note:
+1. For RuPay Credit Card on UPI, transaction limits shall be followed as per NPCI/2023-24/RuPay/022.
+2. The annexure is solely intended for the use of UPI members.
